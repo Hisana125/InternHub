@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Registration Successful — InternHub{% endblock %}
+
+{% block content %}
+<div class="container-sm" style="margin-top: 3rem;">
+    <div class="card" style="text-align: center; padding: 3.5rem 2rem;">
+        <div style="width: 80px; height: 80px; border-radius: var(--radius-full); background: var(--status-selected-bg); color: var(--status-selected); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem;">
+            ✓
+        </div>
+        <h1 class="page-title" style="margin-bottom: 0.75rem;">Registration Successful!</h1>
+        <p style="color: var(--text-muted); font-size: 1.05rem; max-width: 480px; margin: 0 auto 2rem; line-height: 1.6;">
+            Your student account has been created successfully. You can now log in to browse available internships and track your applications.
+        </p>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{% url 'student_login' %}" class="btn btn-primary btn-lg">
+                Log In Now &rarr;
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline btn-lg">
+                Return to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

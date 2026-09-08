@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Available Internships — InternHub{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Available Internships</h1>
+            <p class="page-subtitle">
+                Explore technical and engineering opportunities verified for college students
+            </p>
+        </div>
+        <div>
+            {% if user.is_authenticated %}
+                <a href="{% url 'my_applications' %}" class="btn btn-outline">
+                    📋 My Applications
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Search & Filter Card -->
+    <div class="search-bar-card">
+        <form method="GET" class="search-form-grid">
+            <div class="search-input-wrap">
+                <input
+                    type="text"
+                    name="q"
+                    class="form-control"
+                    placeholder="Search by role, company, skills (e.g. Python, Kochi)..."
+                    value="{{ query }}"
+                >
+            </div>
+
+            {% if locations %}
+                <div style="min-width: 180px;">
+                    <select name="location" class="form-control">
+                        <option value="">All Locations</option>
+                        {% for loc in locations %}
+                            <option value="{{ loc }}" {% if location_filter == loc %}selected{% endif %}>
+                                📍 {{ loc }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary">
+                🔍 Filter
+            </button>
+
+            {% if query or location_filter %}
+                <a href="{% url 'internship_list' %}" class="btn btn-outline">
+                    Reset
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Internships Results Grid -->
+    {% if internships %}
+        <div class="internships-grid">
+            {% for internship in internships %}
+                <div class="internship-card">
+                    <div class="card-top">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                            <div class="card-company">{{ internship.company_name }}</div>
+                            {% if internship.id in applied_internship_ids %}
+                                <span class="badge badge-selected" style="font-size: 0.72rem;">
+                                    ✓ Applied
+                                </span>
+                            {% elif internship.application_deadline < today %}
+                                <span class="badge badge-rejected" style="font-size: 0.72rem;">
+                                    Closed
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <a href="{% url 'internship_detail' internship.id %}" class="card-title-link">
+                            {{ internship.title }}
+                        </a>
+
+                        <div class="card-meta-list">
+                            <div class="card-meta-item">
+                                <span>📍</span> {{ internship.location }}
+                            </div>
+                            <div class="card-meta-item">
+                                <span>⏱</span> {{ internship.duration }}
+                            </div>
+                            <div class="card-meta-item">
+                                <span>💰</span> <strong>{{ internship.stipend }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Skills Tags -->
+                        {% if internship.skills_required %}
+                            <div class="skills-tags">
+                                {% for skill in internship.skills_required.split %}
+                                    <span class="skill-tag">{{ skill|cut:"," }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-actions">
+                        <span class="badge-pill" style="font-size: 0.75rem;">
+                            Deadline: {{ internship.application_deadline|date:"M d, Y" }}
+                        </span>
+                        <a href="{% url 'internship_detail' internship.id %}" class="btn btn-primary btn-sm">
+                            View Details &rarr;
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card" style="text-align: center; padding: 3.5rem 1rem; color: var(--text-muted);">
+            <div style="font-size: 3rem; margin-bottom: 0.75rem;">🔍</div>
+            <h3>No internships found</h3>
+            <p style="margin: 0.5rem 0 1.5rem; font-size: 0.95rem;">
+                {% if query or location_filter %}
+                    No opportunities match your current search criteria. Try modifying your keywords or filters.
+                {% else %}
+                    No internships have been posted yet. Check back soon!
+                {% endif %}
+            </p>
+            {% if query or location_filter %}
+                <a href="{% url 'internship_list' %}" class="btn btn-primary btn-sm">
+                    Clear Search Filters
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

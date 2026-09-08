@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ internship.title }} at {{ internship.company_name }} — InternHub{% endblock %}
+
+{% block content %}
+<div class="container-md">
+    <!-- Breadcrumb / Back Link -->
+    <div style="margin-bottom: 1.25rem;">
+        <a href="{% url 'internship_list' %}" class="btn btn-outline btn-sm">
+            &larr; Back to All Internships
+        </a>
+    </div>
+
+    <!-- Main Detail Card -->
+    <div class="card">
+        <!-- Title & Company Header -->
+        <div style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                <div>
+                    <span class="card-company" style="font-size: 0.95rem;">{{ internship.company_name }}</span>
+                    <h1 class="page-title" style="margin-top: 0.25rem; font-size: 2rem;">
+                        {{ internship.title }}
+                    </h1>
+                </div>
+                <div>
+                    {% if already_applied %}
+                        <span class="badge badge-{{ existing_application.status|lower }}" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
+                            Status: {{ existing_application.status }}
+                        </span>
+                    {% elif is_expired %}
+                        <span class="badge badge-rejected" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
+                            Applications Closed
+                        </span>
+                    {% else %}
+                        <span class="badge badge-selected" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
+                            Accepting Applications
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Specifications Grid -->
+        <h3 style="font-size: 1.05rem; color: var(--dark); margin-bottom: 1rem; font-weight: 700;">
+            Internship Overview
+        </h3>
+        <div class="detail-grid">
+            <div>
+                <div class="detail-item-label">Location</div>
+                <div class="detail-item-value">📍 {{ internship.location }}</div>
+            </div>
+            <div>
+                <div class="detail-item-label">Duration</div>
+                <div class="detail-item-value">⏱ {{ internship.duration }}</div>
+            </div>
+            <div>
+                <div class="detail-item-label">Stipend</div>
+                <div class="detail-item-value" style="color: var(--status-selected);">
+                    💰 {{ internship.stipend }}
+                </div>
+            </div>
+            <div>
+                <div class="detail-item-label">Application Deadline</div>
+                <div class="detail-item-value" {% if is_expired %}style="color: var(--status-rejected);"{% endif %}>
+                    📅 {{ internship.application_deadline|date:"F d, Y" }}
+                </div>
+            </div>
+            <div>
+                <div class="detail-item-label">Posted Date</div>
+                <div class="detail-item-value">{{ internship.created_at|date:"M d, Y" }}</div>
+            </div>
+        </div>
+
+        <!-- Skills Required -->
+        {% if skills_list %}
+            <div style="margin: 1.5rem 0;">
+                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--dark); margin-bottom: 0.6rem;">
+                    Skills Required
+                </h4>
+                <div class="skills-tags">
+                    {% for skill in skills_list %}
+                        <span class="skill-tag" style="padding: 0.35rem 0.8rem; font-size: 0.85rem; background: #EEF2FF; color: var(--primary);">
+                            {{ skill }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Job Description -->
+        <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.75rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--dark); margin-bottom: 1rem;">
+                About the Role & Responsibilities
+            </h3>
+            <div style="color: var(--text-main); font-size: 0.98rem; line-height: 1.8; white-space: pre-line;">
+                {{ internship.description }}
+            </div>
+        </div>
+
+        <!-- Application Action Section -->
+        <div style="margin-top: 2.5rem; background: #F8FAFC; border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 1.75rem; text-align: center;">
+            {% if already_applied %}
+                <div style="display: inline-block; text-align: left; max-width: 500px; margin-bottom: 1rem;">
+                    <div class="alert alert-info" style="margin-bottom: 0;">
+                        <span>
+                            ✓ You have already applied for this role on <strong>{{ existing_application.applied_at|date:"M d, Y" }}</strong>.
+                            Current Status: <strong>{{ existing_application.status }}</strong>.
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <a href="{% url 'my_applications' %}" class="btn btn-primary">
+                        View Application Status &rarr;
+                    </a>
+                </div>
+            {% elif is_expired %}
+                <div class="alert alert-warning" style="display: inline-flex; margin-bottom: 1rem;">
+                    <span>⚠️ The deadline for this internship closed on {{ internship.application_deadline|date:"F d, Y" }}. Applications are no longer accepted.</span>
+                </div>
+                <div>
+                    <a href="{% url 'internship_list' %}" class="btn btn-outline">
+                        Browse Other Openings
+                    </a>
+                </div>
+            {% elif user.is_authenticated %}
+                <h4 style="font-size: 1.2rem; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem;">
+                    Ready to Apply?
+                </h4>
+                <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.25rem;">
+                    Submit your profile to <strong>{{ internship.company_name }}</strong> for the {{ internship.title }} position.
+                </p>
+                <a href="{% url 'apply_internship' internship.id %}" class="btn btn-primary btn-lg">
+                    Apply for this Internship &rarr;
+                </a>
+            {% else %}
+                <h4 style="font-size: 1.2rem; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem;">
+                    Student Login Required
+                </h4>
+                <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.25rem;">
+                    Please log in to your student account or register to submit your application.
+                </p>
+                <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                    <a href="{% url 'student_login' %}?next={% url 'internship_detail' internship.id %}" class="btn btn-primary">
+                        Log In to Apply
+                    </a>
+                    <a href="{% url 'student_register' %}" class="btn btn-outline">
+                        Create Account
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

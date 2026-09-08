@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard — InternHub{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header / Welcome Banner -->
+    <div class="page-header" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: #FFFFFF; padding: 2rem; border-radius: var(--radius-lg); margin-bottom: 2rem;">
+        <div>
+            <span class="brand-badge" style="background: rgba(255,255,255,0.25); color: #fff; margin-bottom: 0.5rem; display: inline-block;">Student Portal</span>
+            <h1 style="color: #FFFFFF; font-size: 2rem; font-weight: 800; margin: 0.25rem 0;">
+                Welcome back, {{ student.name }}! 👋
+            </h1>
+            <p style="color: rgba(255,255,255,0.85); font-size: 0.95rem;">
+                Department of Computer Applications &bull; <strong>{{ student.course }}</strong> &bull; {{ student.email }}
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="{% url 'internship_list' %}" class="btn btn-white" style="background: #FFFFFF; color: var(--primary); font-weight: 700;">
+                🔍 Find Internships
+            </a>
+            <a href="{% url 'my_applications' %}" class="btn btn-outline" style="border-color: rgba(255,255,255,0.6); color: #FFFFFF;">
+                📋 My Applications
+            </a>
+        </div>
+    </div>
+
+    <!-- Application Status Analytics Metrics -->
+    <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--dark); margin-bottom: 1rem;">
+        Application Overview & Metrics
+    </h2>
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon">📑</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ total_applications }}</div>
+                <div class="stat-label">Total Applied</div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-pending">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ pending_applications }}</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-review">
+            <div class="stat-icon">🔍</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ under_review_applications }}</div>
+                <div class="stat-label">Under Review</div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-shortlist">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ shortlisted_applications }}</div>
+                <div class="stat-label">Shortlisted</div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-selected">
+            <div class="stat-icon">🎉</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ selected_applications }}</div>
+                <div class="stat-label">Selected</div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-rejected">
+            <div class="stat-icon">✕</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ rejected_applications }}</div>
+                <div class="stat-label">Rejected</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Grid -->
+    <div style="display: grid; grid-template-columns: 2fr 1.15fr; gap: 1.75rem; margin-top: 1.5rem;" class="dashboard-columns">
+        <!-- Left: Recent Applications -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Recent Applications</h3>
+                    <a href="{% url 'my_applications' %}" class="btn btn-outline btn-sm">
+                        View All ({{ total_applications }})
+                    </a>
+                </div>
+
+                {% if recent_applications %}
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Internship / Company</th>
+                                    <th>Applied On</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in recent_applications %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ app.internship.title }}</strong><br>
+                                            <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                                🏢 {{ app.internship.company_name }} &bull; 📍 {{ app.internship.location }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span style="font-size: 0.85rem; color: var(--text-muted);">
+                                                {{ app.applied_at|date:"M d, Y" }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-{{ app.status|lower }}">
+                                                {{ app.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'internship_detail' app.internship.id %}" class="btn btn-outline btn-sm">
+                                                Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📂</div>
+                        <h4>No applications submitted yet</h4>
+                        <p style="font-size: 0.88rem; margin: 0.5rem 0 1.25rem;">
+                            You have not applied to any internship openings yet.
+                        </p>
+                        <a href="{% url 'internship_list' %}" class="btn btn-primary btn-sm">
+                            Browse Available Internships &rarr;
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column: Profile & Recent Notifications -->
+        <div>
+            <!-- Profile Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Student Profile</h3>
+                    <a href="{% url 'student_edit_self' %}" class="btn btn-outline btn-sm">
+                        ✏️ Edit
+                    </a>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+                    <div>
+                        <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block;">FULL NAME</span>
+                        <strong>{{ student.name }}</strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block;">EMAIL ADDRESS</span>
+                        {{ student.email }}
+                    </div>
+                    <div>
+                        <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block;">PHONE</span>
+                        {{ student.phone }}
+                    </div>
+                    <div>
+                        <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block;">ENROLLED COURSE</span>
+                        <span class="badge-pill" style="font-weight: 600;">{{ student.course }}</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block;">REGISTERED ON</span>
+                        <span style="color: var(--text-muted);">{{ student.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                    <a href="{% url 'student_profile' student.id %}" class="btn btn-outline btn-block btn-sm">
+                        View Full Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Notifications Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        Notifications
+                        {% if unread_notifications_count > 0 %}
+                            <span class="nav-badge" style="vertical-align: middle; margin-left: 0.35rem;">{{ unread_notifications_count }}</span>
+                        {% endif %}
+                    </h3>
+                    <a href="{% url 'student_notifications' %}" class="btn btn-outline btn-sm">
+                        All
+                    </a>
+                </div>
+
+                {% if recent_notifications %}
+                    <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+                        {% for n in recent_notifications %}
+                            <div style="padding: 0.7rem; border-radius: var(--radius-sm); font-size: 0.85rem; border: 1px solid var(--border); {% if not n.is_read %}background: var(--accent-light); border-color: #BFDBFE;{% else %}background: #FFFFFF;{% endif %}">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                                    <div>
+                                        <p style="margin: 0; color: var(--text-main); font-weight: {% if not n.is_read %}600{% else %}400{% endif %};">
+                                            🔔 {{ n.message }}
+                                        </p>
+                                        <span style="font-size: 0.72rem; color: var(--text-muted);">
+                                            {{ n.created_at|timesince }} ago
+                                        </span>
+                                    </div>
+                                    {% if not n.is_read %}
+                                        <a href="{% url 'mark_notification_read' n.id %}" title="Mark read" style="font-size: 0.75rem; color: var(--accent); white-space: nowrap;">
+                                            ✓
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1rem 0;">
+                        No notifications yet.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media (max-width: 900px) {
+    .dashboard-columns {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}

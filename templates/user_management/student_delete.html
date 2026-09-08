@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Student Deletion — InternHub{% endblock %}
+
+{% block content %}
+<div class="container-sm" style="margin-top: 2rem;">
+    <div class="card" style="border-top: 4px solid var(--status-rejected);">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--status-rejected);">⚠️</div>
+            <h1 class="card-title" style="color: var(--status-rejected);">Confirm Deletion</h1>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.5rem;">
+                Are you sure you want to permanently delete the student account for:
+            </p>
+            <div style="font-size: 1.3rem; font-weight: 800; color: var(--dark); margin: 1rem 0;">
+                {{ student.name }}
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Course: {{ student.course }} &bull; Email: {{ student.email }}
+            </p>
+        </div>
+
+        <div class="alert alert-danger" style="margin-bottom: 1.5rem;">
+            <span>Warning: Deleting this student will permanently delete their account, applications, and associated notifications.</span>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button type="submit" class="btn btn-danger btn-lg" style="flex: 1;">
+                    Yes, Permanently Delete
+                </button>
+                <a href="{% url 'student_list' %}" class="btn btn-outline btn-lg" style="flex: 1;">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

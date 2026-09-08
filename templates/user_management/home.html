@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}InternHub — College Internship Management System{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-pill">
+        <span>🚀</span> MEA Engineering College &bull; MCA Internship Portal
+    </div>
+    <h1 class="hero-title">
+        Bridging Academics to <span>Industry Careers</span>
+    </h1>
+    <p class="hero-desc">
+        A centralized, transparent internship management platform designed for college students.
+        Browse curated technical openings, submit online applications, and receive real-time status updates directly to your dashboard.
+    </p>
+
+    <div class="hero-actions">
+        <a href="{% url 'student_register' %}" class="btn btn-primary btn-lg">
+            Create Student Account →
+        </a>
+        <a href="{% url 'internship_list' %}" class="btn btn-outline btn-lg">
+            Explore Internships
+        </a>
+    </div>
+</div>
+
+<div class="container" style="margin-top: 2rem;">
+    <!-- Key Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon">💼</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ total_internships }}</div>
+                <div class="stat-label">Available Internships</div>
+            </div>
+        </div>
+        <div class="stat-card stat-selected">
+            <div class="stat-icon">👨‍🎓</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ total_students }}</div>
+                <div class="stat-label">Enrolled Students</div>
+            </div>
+        </div>
+        <div class="stat-card stat-review">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-info">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Online Tracking</div>
+            </div>
+        </div>
+        <div class="stat-card stat-shortlist">
+            <div class="stat-icon">🔔</div>
+            <div class="stat-info">
+                <div class="stat-number">Real-time</div>
+                <div class="stat-label">Instant Alerts</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Features Grid -->
+    <div class="features-grid">
+        <div class="feature-box">
+            <div class="feature-icon">🔎</div>
+            <h3 class="feature-title">Smart Search</h3>
+            <p class="feature-desc">Filter opportunities by domain, role, location, stipend, and required technical skills.</p>
+        </div>
+
+        <div class="feature-box">
+            <div class="feature-icon">📝</div>
+            <h3 class="feature-title">1-Click Apply</h3>
+            <p class="feature-desc">Seamlessly apply for multiple internships with duplicate detection and verification.</p>
+        </div>
+
+        <div class="feature-box">
+            <div class="feature-icon">📊</div>
+            <h3 class="feature-title">Live Tracking</h3>
+            <p class="feature-desc">Monitor application lifecycles from Pending, Under Review, to Shortlisted or Selected.</p>
+        </div>
+
+        <div class="feature-box">
+            <div class="feature-icon">🔔</div>
+            <h3 class="feature-title">Automated Alerts</h3>
+            <p class="feature-desc">Receive immediate notifications whenever an administrator updates your review status.</p>
+        </div>
+    </div>
+
+    <!-- Recent Opportunities Preview -->
+    {% if recent_internships %}
+        <div style="margin-top: 3rem;">
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title" style="font-size: 1.5rem;">Featured Openings</h2>
+                    <p class="page-subtitle">Latest internships posted on the portal</p>
+                </div>
+                <a href="{% url 'internship_list' %}" class="btn btn-outline btn-sm">
+                    View All Openings &rarr;
+                </a>
+            </div>
+
+            <div class="internships-grid">
+                {% for internship in recent_internships %}
+                    <div class="internship-card">
+                        <div class="card-top">
+                            <div class="card-company">{{ internship.company_name }}</div>
+                            <a href="{% url 'internship_detail' internship.id %}" class="card-title-link">
+                                {{ internship.title }}
+                            </a>
+                            <div class="card-meta-list">
+                                <div class="card-meta-item">
+                                    <span>📍</span> {{ internship.location }}
+                                </div>
+                                <div class="card-meta-item">
+                                    <span>⏱</span> {{ internship.duration }} &bull; <strong>{{ internship.stipend }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <span class="badge-pill">Deadline: {{ internship.application_deadline }}</span>
+                            <a href="{% url 'internship_detail' internship.id %}" class="btn btn-primary btn-sm">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

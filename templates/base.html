@@ -1,0 +1,133 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}InternHub — College Internship Management System{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Main Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="{% if user.is_authenticated %}{% url 'student_dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="brand-logo">
+                <span>🎓 InternHub</span>
+                <span class="brand-badge">MCA Portal</span>
+            </a>
+
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">
+                ☰
+            </button>
+
+            <nav>
+                <ul class="nav-menu" id="navMenu">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a href="{% url 'student_dashboard' %}" class="{% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}">
+                                📊 Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'internship_list' %}" class="{% if request.resolver_match.url_name == 'internship_list' or request.resolver_match.url_name == 'internship_detail' %}active{% endif %}">
+                                💼 Internships
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'my_applications' %}" class="{% if request.resolver_match.url_name == 'my_applications' %}active{% endif %}">
+                                📝 My Applications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'student_notifications' %}" class="{% if request.resolver_match.url_name == 'student_notifications' %}active{% endif %}">
+                                🔔 Notifications
+                                {% if unread_notifications_count > 0 %}
+                                    <span class="nav-badge">{{ unread_notifications_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'student_profile' user.student.id %}" class="{% if request.resolver_match.url_name == 'student_profile' %}active{% endif %}">
+                                👤 Profile
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'student_logout' %}" class="nav-btn-white">
+                                Logout
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                                Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'internship_list' %}" class="{% if request.resolver_match.url_name == 'internship_list' %}active{% endif %}">
+                                Browse Internships
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'student_login' %}" class="nav-btn-outline">
+                                Student Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'student_register' %}" class="nav-btn-white">
+                                Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Flash Messages -->
+    {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }}">
+                    <span>{{ message }}</span>
+                    <button type="button" class="alert-close" onclick="this.parentElement.remove();">&times;</button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Body Content -->
+    <main class="main-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Site Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-credits">
+                <strong>InternHub</strong> — College Internship Management System
+            </div>
+            <div class="footer-sub">
+                APJ Abdul Kalam Technological University | MEA Engineering College, Perinthalmanna
+            </div>
+            <div class="footer-sub">
+                Developed by <strong>Hisana Hamza</strong> (MEA25MCA-201) &bull; &copy; 2026 InternHub. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile navigation toggle
+        const toggleBtn = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+        if (toggleBtn && navMenu) {
+            toggleBtn.addEventListener('click', function() {
+                navMenu.classList.toggle('show');
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

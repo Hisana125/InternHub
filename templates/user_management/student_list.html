@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Registered Students — Administration — InternHub{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Registered Students</h1>
+            <p class="page-subtitle">Administrative directory of all enrolled student accounts</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="/admin/user_management/student/" class="btn btn-primary btn-sm">
+                ⚙️ Django Admin Panel
+            </a>
+            <a href="{% url 'student_dashboard' %}" class="btn btn-outline btn-sm">
+                &larr; Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        {% if students %}
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Email Address</th>
+                            <th>Phone</th>
+                            <th>Course</th>
+                            <th>Registered On</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                            <tr>
+                                <td>
+                                    <strong>{{ student.name }}</strong>
+                                    {% if student.user %}
+                                        <div style="font-size: 0.78rem; color: var(--text-muted);">
+                                            @{{ student.user.username }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>{{ student.email }}</td>
+                                <td>{{ student.phone }}</td>
+                                <td>
+                                    <span class="badge-pill">{{ student.course }}</span>
+                                </td>
+                                <td>{{ student.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <div style="display: flex; gap: 0.4rem;">
+                                        <a href="{% url 'student_profile' student.id %}" class="btn btn-outline btn-sm">
+                                            View
+                                        </a>
+                                        <a href="{% url 'student_edit' student.id %}" class="btn btn-outline btn-sm">
+                                            Edit
+                                        </a>
+                                        <a href="{% url 'student_delete' student.id %}" class="btn btn-danger btn-sm">
+                                            Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                <p>No students have registered yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

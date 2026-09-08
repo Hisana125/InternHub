@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Profile — {{ student.name }} — InternHub{% endblock %}
+
+{% block content %}
+<div class="container-md">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Student Profile</h1>
+            <p class="page-subtitle">Your personal and academic details in InternHub</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{% url 'student_edit_self' %}" class="btn btn-primary">
+                ✏️ Edit Profile
+            </a>
+            <a href="{% url 'student_dashboard' %}" class="btn btn-outline">
+                &larr; Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <!-- Top Profile Banner -->
+        <div style="display: flex; align-items: center; gap: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <div style="width: 72px; height: 72px; border-radius: var(--radius-full); background: var(--primary); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; flex-shrink: 0;">
+                {{ student.name|slice:":1"|upper }}
+            </div>
+            <div>
+                <h2 style="font-size: 1.6rem; color: var(--dark); font-weight: 800; margin-bottom: 0.25rem;">
+                    {{ student.name }}
+                </h2>
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <span class="badge badge-pill" style="font-weight: 600;">🎓 {{ student.course }}</span>
+                    {% if student.user %}
+                        <span class="badge-pill">👤 @{{ student.user.username }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Details Grid -->
+        <h3 style="font-size: 1.1rem; color: var(--dark); margin-bottom: 1rem; font-weight: 700;">
+            Account Information
+        </h3>
+        <div class="detail-grid">
+            <div>
+                <div class="detail-item-label">Full Name</div>
+                <div class="detail-item-value">{{ student.name }}</div>
+            </div>
+            <div>
+                <div class="detail-item-label">Email Address</div>
+                <div class="detail-item-value">{{ student.email }}</div>
+            </div>
+            <div>
+                <div class="detail-item-label">Phone Number</div>
+                <div class="detail-item-value">{{ student.phone }}</div>
+            </div>
+            <div>
+                <div class="detail-item-label">Enrolled Course</div>
+                <div class="detail-item-value">{{ student.course }}</div>
+            </div>
+            <div>
+                <div class="detail-item-label">Member Since</div>
+                <div class="detail-item-value">{{ student.created_at|date:"F d, Y" }}</div>
+            </div>
+            <div>
+                <div class="detail-item-label">Total Applications</div>
+                <div class="detail-item-value">
+                    <span class="badge badge-pill" style="font-size: 0.9rem;">{{ applications_count }} applied</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Links -->
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem; flex-wrap: wrap;">
+            <a href="{% url 'my_applications' %}" class="btn btn-outline">
+                📋 View Submitted Applications
+            </a>
+            <a href="{% url 'internship_list' %}" class="btn btn-outline">
+                💼 Browse New Internships
+            </a>
+            <a href="{% url 'student_edit_self' %}" class="btn btn-primary" style="margin-left: auto;">
+                Update Profile Info
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

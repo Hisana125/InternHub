@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}My Notifications — InternHub{% endblock %}
+
+{% block content %}
+<div class="container-md">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Notifications</h1>
+            <p class="page-subtitle">
+                {% if unread_count > 0 %}
+                    You have <strong style="color: var(--accent);">{{ unread_count }} unread</strong> notification{{ unread_count|pluralize }}.
+                {% else %}
+                    All notifications are marked as read.
+                {% endif %}
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            {% if unread_count > 0 %}
+                <a href="{% url 'mark_all_notifications_read' %}" class="btn btn-primary btn-sm">
+                    ✓ Mark All as Read
+                </a>
+            {% endif %}
+            <a href="{% url 'student_dashboard' %}" class="btn btn-outline btn-sm">
+                &larr; Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+        <a href="{% url 'student_notifications' %}" class="btn btn-sm {% if filter_type != 'unread' %}btn-primary{% else %}btn-outline{% endif %}">
+            All Notifications
+        </a>
+        <a href="{% url 'student_notifications' %}?filter=unread" class="btn btn-sm {% if filter_type == 'unread' %}btn-primary{% else %}btn-outline{% endif %}">
+            Unread Only
+            {% if unread_count > 0 %}
+                <span class="nav-badge" style="margin-left: 0.25rem;">{{ unread_count }}</span>
+            {% endif %}
+        </a>
+    </div>
+
+    <!-- Notifications List -->
+    {% if notifications %}
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for notification in notifications %}
+                <div class="notification-card {% if not notification.is_read %}notification-unread{% endif %}">
+                    <div class="notification-content">
+                        <div class="notification-icon">
+                            {% if not notification.is_read %}🔔{% else %}📩{% endif %}
+                        </div>
+                        <div>
+                            <div class="notification-text" style="font-weight: {% if not notification.is_read %}600{% else %}400{% endif %};">
+                                {{ notification.message }}
+                            </div>
+                            <div class="notification-time">
+                                ⏱ {{ notification.created_at|timesince }} ago &bull; {{ notification.created_at|date:"M d, Y h:i A" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0;">
+                        {% if not notification.is_read %}
+                            <a href="{% url 'mark_notification_read' notification.id %}" class="btn btn-outline btn-sm" title="Mark as Read">
+                                ✓ Mark Read
+                            </a>
+                        {% else %}
+                            <span style="font-size: 0.8rem; color: var(--text-muted); padding: 0.35rem 0.5rem;">
+                                Read
+                            </span>
+                        {% endif %}
+
+                        <a href="{% url 'delete_notification' notification.id %}" class="btn btn-outline btn-sm" style="color: var(--status-rejected); border-color: transparent;" title="Delete" onclick="return confirm('Delete this notification?');">
+                            🗑
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card" style="text-align: center; padding: 3.5rem 1.5rem; color: var(--text-muted);">
+            <div style="font-size: 3rem; margin-bottom: 0.75rem;">🔕</div>
+            <h3>No notifications found</h3>
+            <p style="margin-top: 0.5rem; font-size: 0.92rem;">
+                {% if filter_type == 'unread' %}
+                    You have no unread notifications right now.
+                {% else %}
+                    You have not received any notifications yet.
+                {% endif %}
+            </p>
+            <a href="{% url 'student_dashboard' %}" class="btn btn-outline btn-sm" style="margin-top: 1.25rem;">
+                Return to Dashboard
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
