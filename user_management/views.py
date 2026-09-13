@@ -36,7 +36,7 @@ def student_register(request):
         return redirect('student_dashboard')
 
     if request.method == 'POST':
-        form = StudentForm(request.POST)
+        form = StudentForm(request.POST, request.FILES)
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
@@ -194,7 +194,7 @@ def student_edit(request, id=None):
         return redirect('student_dashboard')
 
     if request.method == 'POST':
-        form = StudentProfileEditForm(request.POST, instance=student)
+        form = StudentProfileEditForm(request.POST, request.FILES, instance=student)
         if form.is_valid():
             student = form.save()
             # Sync email with user model

@@ -15,7 +15,6 @@
         <div class="nav-container">
             <a href="{% if user.is_authenticated %}{% url 'student_dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="brand-logo">
                 <span>🎓 InternHub</span>
-                <span class="brand-badge">MCA Portal</span>
             </a>
 
             <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">
@@ -110,10 +109,7 @@
                 <strong>InternHub</strong> — College Internship Management System
             </div>
             <div class="footer-sub">
-                APJ Abdul Kalam Technological University | MEA Engineering College, Perinthalmanna
-            </div>
-            <div class="footer-sub">
-                Developed by <strong>Hisana Hamza</strong> (MEA25MCA-201) &bull; &copy; 2026 InternHub. All rights reserved.
+                 &copy; 2026 InternHub. All rights reserved.
             </div>
         </div>
     </footer>

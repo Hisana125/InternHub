@@ -9,10 +9,18 @@ class Student(models.Model):
         null=True,
         blank=True
     )
+
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=15)
     course = models.CharField(max_length=100)
+
+    resume = models.FileField(
+        upload_to='resumes/',
+        blank=True,
+        null=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
