@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Application Payment — {{ internship.title }} — InternHub{% endblock %}
+
+{% block content %}
+<div class="container-sm" style="margin-top: 1.5rem; max-width: 620px;">
+    <!-- Back Navigation -->
+    <div style="margin-bottom: 1.25rem;">
+        <a href="{% url 'internship_detail' internship.id %}" class="btn btn-outline btn-sm">
+            &larr; Return to Internship Details
+        </a>
+    </div>
+
+    <div class="card" style="border-top: 4px solid var(--accent); box-shadow: var(--shadow-lg);">
+        <div style="text-align: center; margin-bottom: 1.75rem;">
+            <div style="font-size: 2.6rem; margin-bottom: 0.5rem;">💳</div>
+            <h1 class="page-title" style="font-size: 1.6rem; margin-bottom: 0.35rem;">
+                Internship Application Fee
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                Complete your fee payment to finalize and submit your application
+            </p>
+        </div>
+
+        <!-- Application Summary Card -->
+        <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; flex-wrap: wrap;">
+                <div>
+                    <span class="card-company" style="font-size: 0.8rem;">{{ internship.company_name }}</span>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--dark); margin: 0.2rem 0;">
+                        {{ internship.title }}
+                    </h3>
+                </div>
+                <span class="badge badge-pending">Payment Required</span>
+            </div>
+
+            <div style="margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px dashed var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.85rem;">
+                <div>
+                    <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">APPLICANT</span>
+                    <strong>{{ application.student.name }}</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">APPLICATION REF</span>
+                    <strong>#APP-{{ application.id }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fee Breakdown -->
+        <div style="background: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                <span style="color: var(--text-muted);">Application Registration Fee</span>
+                <span style="font-weight: 600;">₹{{ payment.amount|floatformat:2 }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                <span style="color: var(--text-muted);">Institutional Verification</span>
+                <span style="color: var(--status-selected); font-weight: 600;">FREE</span>
+            </div>
+            <div style="border-top: 1.5px dashed #93C5FD; padding-top: 0.75rem; margin-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+                <strong style="font-size: 1.05rem; color: var(--dark);">Total Amount Payable:</strong>
+                <strong style="font-size: 1.5rem; color: var(--accent);">₹{{ payment.amount|floatformat:2 }}</strong>
+            </div>
+        </div>
+
+        <!-- Payment Method Selection Form -->
+        <form method="POST">
+            {% csrf_token %}
+
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--dark); margin-bottom: 0.85rem;">
+                Select Demo Payment Method
+            </h4>
+
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.75rem;">
+                <label style="display: flex; align-items: center; gap: 0.85rem; padding: 0.9rem 1.1rem; border: 1.5px solid var(--accent); border-radius: var(--radius-md); background: #F8FAFC; cursor: pointer;">
+                    <input type="radio" name="payment_method" value="UPI / QR Code (GPay, PhonePe)" checked style="width: auto; margin: 0;">
+                    <div>
+                        <strong style="display: block; font-size: 0.95rem; color: var(--dark);">UPI / QR Code</strong>
+                        <span style="font-size: 0.78rem; color: var(--text-muted);">Google Pay, PhonePe, Paytm, BHIM UPI</span>
+                    </div>
+                    <span style="margin-left: auto; font-size: 1.25rem;">📱</span>
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 0.85rem; padding: 0.9rem 1.1rem; border: 1.5px solid var(--border); border-radius: var(--radius-md); background: #FFFFFF; cursor: pointer;">
+                    <input type="radio" name="payment_method" value="Debit / Credit Card" style="width: auto; margin: 0;">
+                    <div>
+                        <strong style="display: block; font-size: 0.95rem; color: var(--dark);">Debit / Credit Card</strong>
+                        <span style="font-size: 0.78rem; color: var(--text-muted);">Visa, MasterCard, RuPay Card</span>
+                    </div>
+                    <span style="margin-left: auto; font-size: 1.25rem;">💳</span>
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 0.85rem; padding: 0.9rem 1.1rem; border: 1.5px solid var(--border); border-radius: var(--radius-md); background: #FFFFFF; cursor: pointer;">
+                    <input type="radio" name="payment_method" value="Net Banking" style="width: auto; margin: 0;">
+                    <div>
+                        <strong style="display: block; font-size: 0.95rem; color: var(--dark);">Net Banking</strong>
+                        <span style="font-size: 0.78rem; color: var(--text-muted);">SBI, HDFC, ICICI, Federal Bank & all major banks</span>
+                    </div>
+                    <span style="margin-left: auto; font-size: 1.25rem;">🏦</span>
+                </label>
+            </div>
+
+            <!-- Simulated Payment Gateway Notice -->
+            <div style="text-align: center; margin-bottom: 1.5rem; font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                <span>🔒</span> 256-bit Encrypted Academic Simulation &bull; No Real Card Debited
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg" style="font-size: 1.05rem; padding: 0.9rem;">
+                Pay ₹{{ payment.amount|floatformat:2 }} & Submit Application &rarr;
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

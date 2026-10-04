@@ -123,18 +123,19 @@ def student_dashboard(request):
         messages.error(request, "Student profile not found. Please contact administration.")
         return redirect('student_logout')
 
-    applications = Application.objects.filter(student=student)
+    # Metric counts (only for submitted applications with completed payment)
+    paid_applications = Application.objects.filter(student=student, payment__status='Success')
+    pending_payment_count = Application.objects.filter(student=student, payment__status='Pending').count()
 
-    # Metric counts
-    total_applications = applications.count()
-    pending_applications = applications.filter(status='Pending').count()
-    under_review_applications = applications.filter(status='Under Review').count()
-    shortlisted_applications = applications.filter(status='Shortlisted').count()
-    selected_applications = applications.filter(status='Selected').count()
-    rejected_applications = applications.filter(status='Rejected').count()
+    total_applications = paid_applications.count()
+    pending_applications = paid_applications.filter(status='Pending').count()
+    under_review_applications = paid_applications.filter(status='Under Review').count()
+    shortlisted_applications = paid_applications.filter(status='Shortlisted').count()
+    selected_applications = paid_applications.filter(status='Selected').count()
+    rejected_applications = paid_applications.filter(status='Rejected').count()
 
     # Recent items
-    recent_applications = applications.select_related('internship').order_by('-applied_at')[:5]
+    recent_applications = paid_applications.select_related('internship').order_by('-applied_at')[:5]
     recent_notifications = Notification.objects.filter(student=student).order_by('-created_at')[:5]
 
     return render(request, 'user_management/student_dashboard.html', {
@@ -145,6 +146,7 @@ def student_dashboard(request):
         'shortlisted_applications': shortlisted_applications,
         'selected_applications': selected_applications,
         'rejected_applications': rejected_applications,
+        'pending_payment_count': pending_payment_count,
         'recent_applications': recent_applications,
         'recent_notifications': recent_notifications,
     })
@@ -171,8 +173,8 @@ def student_profile(request, id=None):
     else:
         student = current_student
 
-    applications_count = Application.objects.filter(student=student).count()
-    selected_count = Application.objects.filter(student=student, status='Selected').count()
+    applications_count = Application.objects.filter(student=student, payment__status='Success').count()
+    selected_count = Application.objects.filter(student=student, payment__status='Success', status='Selected').count()
 
     return render(request, 'user_management/student_profile.html', {
         'student': student,

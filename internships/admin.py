@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Internship, Application, Notification
+from .models import Internship, Application, Notification, Payment
 
 # Custom Admin Site Branding
 admin.site.site_header = "InternHub Administration Portal"
@@ -32,16 +32,52 @@ class InternshipAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
 
 
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'student_name',
+        'internship_title',
+        'amount',
+        'status',
+        'payment_method',
+        'transaction_id',
+        'paid_at',
+    )
+    list_filter = (
+        'status',
+        'payment_method',
+        'paid_at',
+    )
+    search_fields = (
+        'application__student__name',
+        'application__student__email',
+        'application__internship__title',
+        'transaction_id',
+    )
+    ordering = ('-paid_at',)
+
+    def student_name(self, obj):
+        return obj.application.student.name
+    student_name.short_description = "Student"
+
+    def internship_title(self, obj):
+        return obj.application.internship.title
+    internship_title.short_description = "Internship"
+
+
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
     list_display = (
         'student',
         'internship',
         'status',
+        'payment_status_badge',
         'applied_at',
     )
     list_filter = (
         'status',
+        'payment__status',
         'internship',
         'applied_at',
     )
@@ -51,6 +87,14 @@ class ApplicationAdmin(admin.ModelAdmin):
         'internship__title',
         'internship__company_name',
     )
+
+    def payment_status_badge(self, obj):
+        if hasattr(obj, 'payment'):
+            if obj.payment.status == 'Success':
+                return f"✓ Paid (₹{obj.payment.amount})"
+            return f"⏳ Pending (₹{obj.payment.amount})"
+        return "—"
+    payment_status_badge.short_description = "Application Fee"
     ordering = ('-applied_at',)
     actions = [
         'mark_under_review',

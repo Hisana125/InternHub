@@ -98,14 +98,26 @@ class ApplicationWorkflowTests(TestCase):
         )
         self.client.login(username='applicant', password='Password123')
 
-    def test_successful_application(self):
-        response = self.client.post(reverse('apply_internship', args=[self.internship.id]), follow=True)
-        self.assertEqual(response.status_code, 200)
+    def test_successful_application_and_payment(self):
+        # 1. Apply initializes application and pending payment
+        response = self.client.post(reverse('apply_internship', args=[self.internship.id]))
+        self.assertEqual(response.status_code, 302)
 
-        # Check Application created with 'Pending' status
         app = Application.objects.filter(student=self.student, internship=self.internship).first()
         self.assertIsNotNone(app)
         self.assertEqual(app.status, 'Pending')
+        self.assertTrue(hasattr(app, 'payment'))
+        self.assertEqual(app.payment.status, 'Pending')
+
+        # 2. Complete payment
+        pay_response = self.client.post(reverse('payment_page', args=[app.id]), {
+            'payment_method': 'UPI / QR Code'
+        }, follow=True)
+        self.assertEqual(pay_response.status_code, 200)
+
+        app.payment.refresh_from_db()
+        self.assertEqual(app.payment.status, 'Success')
+        self.assertIsNotNone(app.payment.transaction_id)
 
         # Check Notification dispatched to student
         self.assertTrue(Notification.objects.filter(
@@ -113,12 +125,24 @@ class ApplicationWorkflowTests(TestCase):
             message__icontains=self.internship.title
         ).exists())
 
-    def test_duplicate_application_prevention(self):
-        # Apply once
+    def test_pending_payment_recovery(self):
+        # Apply creates pending payment
         self.client.post(reverse('apply_internship', args=[self.internship.id]))
+        app = Application.objects.get(student=self.student, internship=self.internship)
+
+        # Student re-visits apply page while payment is pending
+        response = self.client.get(reverse('apply_internship', args=[self.internship.id]))
+        self.assertRedirects(response, reverse('payment_page', args=[app.id]))
+
+    def test_duplicate_application_prevention(self):
+        # Apply once and pay
+        self.client.post(reverse('apply_internship', args=[self.internship.id]))
+        app = Application.objects.get(student=self.student, internship=self.internship)
+        self.client.post(reverse('payment_page', args=[app.id]), {'payment_method': 'Card'})
+
         self.assertEqual(Application.objects.filter(student=self.student, internship=self.internship).count(), 1)
 
-        # Apply again - should redirect without creating duplicate
+        # Apply again - should redirect to my_applications without creating duplicate
         response = self.client.post(reverse('apply_internship', args=[self.internship.id]), follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Application.objects.filter(student=self.student, internship=self.internship).count(), 1)

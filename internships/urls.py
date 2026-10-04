@@ -7,4 +7,7 @@ urlpatterns = [
     path('my_applications/', views.my_applications, name='my_applications'),
     path('<int:id>/apply/', views.apply_internship, name='apply_internship'),
     path('applications/<int:id>/withdraw/', views.withdraw_application, name='withdraw_application'),
+    # Payment URLs
+    path('payment/<int:id>/', views.payment_page, name='payment_page'),
+    path('payment/success/<int:id>/', views.payment_success, name='payment_success'),
 ]

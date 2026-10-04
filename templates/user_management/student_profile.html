@@ -69,6 +69,18 @@
                     <span class="badge badge-pill" style="font-size: 0.9rem;">{{ applications_count }} applied</span>
                 </div>
             </div>
+            <div>
+                <div class="detail-item-label">Resume / CV</div>
+                <div class="detail-item-value">
+                    {% if student.resume %}
+                        <a href="{{ student.resume.url }}" target="_blank" class="badge badge-selected" style="font-size: 0.85rem; padding: 0.35rem 0.75rem; text-decoration: none;">
+                            📄 View Uploaded Resume
+                        </a>
+                    {% else %}
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Not Uploaded</span>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
         <!-- Action Links -->

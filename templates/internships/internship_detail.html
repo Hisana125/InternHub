@@ -27,6 +27,10 @@
                         <span class="badge badge-{{ existing_application.status|lower }}" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
                             Status: {{ existing_application.status }}
                         </span>
+                    {% elif is_payment_pending %}
+                        <span class="badge badge-pending" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
+                            ⏳ Fee Payment Pending
+                        </span>
                     {% elif is_expired %}
                         <span class="badge badge-rejected" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
                             Applications Closed
@@ -103,7 +107,7 @@
                 <div style="display: inline-block; text-align: left; max-width: 500px; margin-bottom: 1rem;">
                     <div class="alert alert-info" style="margin-bottom: 0;">
                         <span>
-                            ✓ You have already applied for this role on <strong>{{ existing_application.applied_at|date:"M d, Y" }}</strong>.
+                            ✓ You have applied for this role on <strong>{{ existing_application.applied_at|date:"M d, Y" }}</strong>.
                             Current Status: <strong>{{ existing_application.status }}</strong>.
                         </span>
                     </div>
@@ -111,6 +115,19 @@
                 <div>
                     <a href="{% url 'my_applications' %}" class="btn btn-primary">
                         View Application Status &rarr;
+                    </a>
+                </div>
+            {% elif is_payment_pending %}
+                <div style="display: inline-block; text-align: left; max-width: 540px; margin-bottom: 1.25rem;">
+                    <div class="alert alert-warning" style="margin-bottom: 0;">
+                        <span>
+                            ⏳ <strong>Payment Pending:</strong> You have an application waiting for the ₹500 fee payment. Complete payment to finalize submission.
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <a href="{% url 'payment_page' existing_application.id %}" class="btn btn-primary btn-lg">
+                        Complete Payment (₹500) &rarr;
                     </a>
                 </div>
             {% elif is_expired %}

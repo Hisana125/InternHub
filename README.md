@@ -44,6 +44,7 @@ Traditional college internship tracking often relies on disconnected Google Form
    - `email` (EmailField)
    - `phone` (VARCHAR 15)
    - `course` (VARCHAR 100, e.g. MCA, B.Tech CSE, BCA)
+   - `resume` (FileField, stored in `media/resumes/`)
    - `created_at` (DateTimeField)
 
 2. **`internships_internship`**:
@@ -66,7 +67,16 @@ Traditional college internship tracking often relies on disconnected Google Form
    - `status` (VARCHAR 20, Choices: *Pending*, *Under Review*, *Shortlisted*, *Selected*, *Rejected*)
    - *Constraint*: `unique_student_internship_application` (ensures single application per role)
 
-4. **`internships_notification`**:
+4. **`internships_payment`**:
+   - `id` (Primary Key, INT)
+   - `application_id` (OneToOneField -> `Application`, CASCADE)
+   - `amount` (DecimalField, e.g. ₹500.00)
+   - `status` (VARCHAR 20, Choices: *Pending*, *Success*)
+   - `payment_method` (VARCHAR 50, e.g. UPI, Card, Net Banking)
+   - `transaction_id` (VARCHAR 100, Unique reference ID)
+   - `paid_at` (DateTimeField)
+
+5. **`internships_notification`**:
    - `id` (Primary Key, INT)
    - `student_id` (ForeignKey -> `Student`, CASCADE)
    - `message` (TEXT)

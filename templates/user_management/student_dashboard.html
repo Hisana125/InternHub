@@ -25,6 +25,17 @@
         </div>
     </div>
 
+    {% if pending_payment_count > 0 %}
+        <div class="alert alert-warning" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <span>
+                ⏳ You have <strong>{{ pending_payment_count }}</strong> incomplete application{{ pending_payment_count|pluralize }} waiting for the ₹500 fee payment.
+            </span>
+            <a href="{% url 'my_applications' %}" class="btn btn-primary btn-sm" style="white-space: nowrap;">
+                Complete Payment Now &rarr;
+            </a>
+        </div>
+    {% endif %}
+
     <!-- Application Status Analytics Metrics -->
     <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--dark); margin-bottom: 1rem;">
         Application Overview & Metrics
