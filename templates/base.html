@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}InternHub — College Internship Management System{% endblock %}</title>
+    <title>{% block title %}InternHub — MEA Engineering College Internship Portal{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
@@ -13,7 +13,7 @@
     <!-- Main Navigation Bar -->
     <header class="navbar">
         <div class="nav-container">
-            <a href="{% if user.is_authenticated %}{% url 'student_dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="brand-logo">
+            <a href="{% if user.is_authenticated %}{% if user.student %}{% url 'student_dashboard' %}{% elif user.company %}{% url 'company_dashboard' %}{% elif user.is_staff %}/admin/{% else %}{% url 'home' %}{% endif %}{% else %}{% url 'home' %}{% endif %}" class="brand-logo">
                 <span>🎓 InternHub</span>
             </a>
 
@@ -24,40 +24,78 @@
             <nav>
                 <ul class="nav-menu" id="navMenu">
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a href="{% url 'student_dashboard' %}" class="{% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}">
-                                📊 Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'internship_list' %}" class="{% if request.resolver_match.url_name == 'internship_list' or request.resolver_match.url_name == 'internship_detail' %}active{% endif %}">
-                                💼 Internships
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'my_applications' %}" class="{% if request.resolver_match.url_name == 'my_applications' %}active{% endif %}">
-                                📝 My Applications
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'student_notifications' %}" class="{% if request.resolver_match.url_name == 'student_notifications' %}active{% endif %}">
-                                🔔 Notifications
-                                {% if unread_notifications_count > 0 %}
-                                    <span class="nav-badge">{{ unread_notifications_count }}</span>
-                                {% endif %}
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'student_profile' user.student.id %}" class="{% if request.resolver_match.url_name == 'student_profile' %}active{% endif %}">
-                                👤 Profile
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'student_logout' %}" class="nav-btn-white">
-                                Logout
-                            </a>
-                        </li>
+                        {% if user.student %}
+                            <!-- Student Navigation -->
+                            <li class="nav-item">
+                                <a href="{% url 'student_dashboard' %}" class="{% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}">
+                                    📊 Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'internship_list' %}" class="{% if request.resolver_match.url_name == 'internship_list' or request.resolver_match.url_name == 'internship_detail' %}active{% endif %}">
+                                    💼 Internships
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'my_applications' %}" class="{% if request.resolver_match.url_name == 'my_applications' %}active{% endif %}">
+                                    📝 My Applications
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'student_notifications' %}" class="{% if request.resolver_match.url_name == 'student_notifications' %}active{% endif %}">
+                                    🔔 Notifications
+                                    {% if unread_notifications_count > 0 %}
+                                        <span class="nav-badge">{{ unread_notifications_count }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'student_profile' user.student.id %}" class="{% if request.resolver_match.url_name == 'student_profile' %}active{% endif %}">
+                                    👤 Profile
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'student_logout' %}" class="nav-btn-white">
+                                    Logout
+                                </a>
+                            </li>
+                        {% elif user.company %}
+                            <!-- Company Navigation -->
+                            <li class="nav-item">
+                                <a href="{% url 'company_dashboard' %}" class="{% if request.resolver_match.url_name == 'company_dashboard' or request.resolver_match.url_name == 'company_profile_edit' %}active{% endif %}">
+                                    🏢 Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'company_post_internship' %}" class="{% if request.resolver_match.url_name == 'company_post_internship' %}active{% endif %}">
+                                    📢 Post Internship
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'student_logout' %}" class="nav-btn-white">
+                                    Logout
+                                </a>
+                            </li>
+                        {% else %}
+                            <!-- Staff / Administrator Navigation -->
+                            <li class="nav-item">
+                                <a href="/admin/">
+                                    ⚙️ Admin Portal
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'internship_list' %}" class="{% if request.resolver_match.url_name == 'internship_list' %}active{% endif %}">
+                                    💼 Internships
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'student_logout' %}" class="nav-btn-white">
+                                    Logout
+                                </a>
+                            </li>
+                        {% endif %}
                     {% else %}
+                        <!-- Guest Navigation -->
                         <li class="nav-item">
                             <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                                 Home
@@ -69,8 +107,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="{% url 'company_register' %}" class="{% if request.resolver_match.url_name == 'company_register' %}active{% endif %}">
+                                🏢 For Employers
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="{% url 'student_login' %}" class="nav-btn-outline">
-                                Student Login
+                                Sign In
                             </a>
                         </li>
                         <li class="nav-item">
@@ -106,10 +149,11 @@
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-credits">
-                <strong>InternHub</strong> — College Internship Management System
+                <strong>InternHub</strong> &mdash; MEA Engineering College
             </div>
             <div class="footer-sub">
-                 &copy; 2026 InternHub. All rights reserved.
+                Training &amp; Placement Cell &bull; Perinthalmanna, Malappuram, Kerala<br>
+                Affiliated to APJ Abdul Kalam Technological University (KTU) &bull; &copy; 2026 MEAEC. All rights reserved.
             </div>
         </div>
     </footer>

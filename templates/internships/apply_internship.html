@@ -43,6 +43,16 @@
                 <div class="detail-item-value">{{ student.name }}</div>
             </div>
             <div>
+                <div class="detail-item-label">MEA Reg. No.</div>
+                <div class="detail-item-value">
+                    {% if student.registration_number %}
+                        <strong style="color: var(--primary);">{{ student.registration_number }}</strong>
+                    {% else %}
+                        <span style="color: var(--text-muted);">Not Provided</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
                 <div class="detail-item-label">Contact Email</div>
                 <div class="detail-item-value">{{ student.email }}</div>
             </div>
@@ -54,7 +64,33 @@
                 <div class="detail-item-label">Degree / Course</div>
                 <div class="detail-item-value">{{ student.course }}</div>
             </div>
+            <div>
+                <div class="detail-item-label">Resume / CV Status</div>
+                <div class="detail-item-value">
+                    {% if student.resume %}
+                        <span style="color: var(--status-selected); font-weight: 700;">
+                            ✓ Uploaded
+                        </span>
+                        <a href="{{ student.resume.url }}" target="_blank" rel="noopener noreferrer" style="font-size: 0.82rem; text-decoration: underline; margin-left: 0.35rem;">
+                            (Preview)
+                        </a>
+                    {% else %}
+                        <span style="color: #E11D48; font-weight: 700;">
+                            ⚠️ Not Uploaded
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
         </div>
+
+        {% if not student.resume %}
+        <div class="alert alert-warning" style="margin-bottom: 1.25rem; background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+            <span>⚠️ <strong>No Resume Attached:</strong> You have not uploaded a resume to your profile yet. While you can still apply, employers strongly prefer applicants with a resume.</span>
+            <a href="{% url 'student_edit_self' %}" class="btn btn-sm btn-outline" style="background: #FFFFFF; font-weight: 600; white-space: nowrap;">
+                Upload Resume Now &rarr;
+            </a>
+        </div>
+        {% endif %}
 
         <div class="alert alert-info" style="margin-bottom: 1.75rem;">
             <span>ℹ️ Need to change your details? <a href="{% url 'student_edit_self' %}" style="text-decoration: underline; font-weight: 600;">Update your profile</a> before submitting.</span>

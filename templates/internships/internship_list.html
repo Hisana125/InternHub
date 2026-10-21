@@ -70,10 +70,6 @@
                                 <span class="badge badge-selected" style="font-size: 0.72rem;">
                                     ✓ Applied
                                 </span>
-                            {% elif internship.id in pending_payment_internship_ids %}
-                                <span class="badge badge-pending" style="font-size: 0.72rem;">
-                                    ⏳ Fee Pending
-                                </span>
                             {% elif internship.application_deadline < today %}
                                 <span class="badge badge-rejected" style="font-size: 0.72rem;">
                                     Closed

@@ -43,45 +43,6 @@
         </a>
     </div>
 
-    <!-- Pending Payments Alert Section -->
-    {% if pending_payment_apps %}
-        <div class="card" style="border-left: 4px solid var(--status-pending); background: #FFFBEB; margin-bottom: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-                <div>
-                    <h3 style="font-size: 1.1rem; color: var(--status-pending); margin: 0; font-weight: 700;">
-                        ⏳ Incomplete Applications (Fee Payment Pending)
-                    </h3>
-                    <p style="font-size: 0.85rem; color: #92400E; margin: 0.2rem 0 0;">
-                        The following applications need the ₹500 application fee payment to be submitted for coordinator review.
-                    </p>
-                </div>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                {% for p_app in pending_payment_apps %}
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; border: 1px solid #FDE68A; border-radius: var(--radius-sm); padding: 0.85rem 1.1rem; flex-wrap: wrap; gap: 0.75rem;">
-                        <div>
-                            <strong style="color: var(--dark); font-size: 0.95rem;">{{ p_app.internship.title }}</strong> &bull;
-                            <span style="color: var(--text-muted); font-size: 0.85rem;">{{ p_app.internship.company_name }}</span>
-                            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
-                                Initiated on {{ p_app.applied_at|date:"M d, Y" }} &bull; Fee: ₹500.00
-                            </div>
-                        </div>
-
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <a href="{% url 'payment_page' p_app.id %}" class="btn btn-primary btn-sm">
-                                💳 Complete Payment (₹500) &rarr;
-                            </a>
-                            <a href="{% url 'withdraw_application' p_app.id %}" class="btn btn-outline btn-sm" style="color: var(--status-rejected); border-color: #FECDD3;" onclick="return confirm('Cancel this unpaid application?');">
-                                Cancel
-                            </a>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    {% endif %}
-
     <!-- Applications Table / List -->
     {% if applications %}
         <div class="card" style="padding: 0; overflow: hidden;">
@@ -127,13 +88,6 @@
                                     <span class="badge badge-{{ app.status|lower }}">
                                         {{ app.status }}
                                     </span>
-                                    {% if app.payment %}
-                                        <div style="margin-top: 0.35rem;">
-                                            <a href="{% url 'payment_success' app.payment.id %}" style="font-size: 0.75rem; color: var(--accent); font-weight: 600;" title="View payment receipt">
-                                                🧾 Receipt ({{ app.payment.transaction_id|default:"Paid" }})
-                                            </a>
-                                        </div>
-                                    {% endif %}
                                 </td>
                                 <td>
                                     <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -145,8 +99,9 @@
                                             <a
                                                 href="{% url 'withdraw_application' app.id %}"
                                                 class="btn btn-outline btn-sm"
-                                                style="color: var(--status-rejected); border-color: #FECDD3;"
-                                                onclick="return confirm('Are you sure you want to withdraw your application for {{ app.internship.title }}?');"
+                                                style="color: var(--status-rejected); border-color: #FECDD3; transition: var(--transition);"
+                                                onclick="return confirm('Are you sure you want to withdraw your application for \'{{ app.internship.title|escapejs }}\'? This will remove your application from employer review.');"
+                                                title="Withdraw application while still in Pending review"
                                             >
                                                 Withdraw
                                             </a>

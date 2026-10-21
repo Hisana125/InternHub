@@ -1,20 +1,25 @@
 {% extends 'base.html' %}
 
-{% block title %}InternHub — College Internship Management System{% endblock %}
+{% block title %}InternHub — MEA Engineering College Internship Portal{% endblock %}
 
 {% block content %}
 <div class="hero-section">
+    <div style="display: inline-block; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); padding: 0.35rem 1.1rem; border-radius: 9999px; font-size: 0.88rem; font-weight: 700; margin-bottom: 1.25rem; letter-spacing: 0.5px;">
+        🎓 MEA ENGINEERING COLLEGE &bull; TRAINING &amp; PLACEMENT CELL
+    </div>
     <h1 class="hero-title">
-        Bridging Academics to <span>Industry Careers</span>
+        Bridging MEA Engineering College to <span>Industry Careers</span>
     </h1>
     <p class="hero-desc">
-        A centralized, transparent internship management platform designed for college students.
-        Browse curated technical openings, submit online applications, and receive real-time status updates directly to your dashboard.
+        The official internship management portal of MEA Engineering College, Perinthalmanna. Connecting MCA, B.Tech, and M.Tech scholars with verified technology opportunities, automated workflow tracking, and seamless campus hiring.
     </p>
 
     <div class="hero-actions">
         <a href="{% url 'student_register' %}" class="btn btn-primary btn-lg">
             Create Student Account →
+        </a>
+        <a href="{% url 'company_register' %}" class="btn btn-secondary btn-lg">
+            For Employers →
         </a>
         <a href="{% url 'internship_list' %}" class="btn btn-outline btn-lg">
             Explore Internships

@@ -7,9 +7,9 @@
     <div class="form-card">
         <div style="text-align: center; margin-bottom: 2rem;">
             <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">🔐</div>
-            <h1 class="card-title" style="font-size: 1.75rem;">Student Login</h1>
+            <h1 class="card-title" style="font-size: 1.75rem;">Portal Sign In</h1>
             <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 0.35rem;">
-                Access your InternHub student dashboard and applications
+                Sign in to your Student or Employer account
             </p>
         </div>
 
@@ -35,6 +35,9 @@
             <div class="form-group">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
                     <label for="password" class="form-label" style="margin: 0;">Password</label>
+                    <a href="javascript:void(0);" onclick="toggleForgotInfo();" style="font-size: 0.82rem; color: var(--accent); font-weight: 600; text-decoration: none;">
+                        Forgot Password?
+                    </a>
                 </div>
                 <input
                     type="password"
@@ -46,16 +49,37 @@
                 >
             </div>
 
+            <!-- Forgot Password Info Box -->
+            <div id="forgotInfo" style="display: none; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); padding: 0.85rem; font-size: 0.82rem; color: #1E40AF; margin-top: 0.75rem;">
+                <strong>Need help recovering your password?</strong><br>
+                For MEA students and recruiter accounts, please contact the <strong>MEA Placement & Training Cell</strong> at <a href="mailto:placement@meaec.edu.in" style="color: #1E40AF; font-weight: 700; text-decoration: underline;">placement@meaec.edu.in</a> or see your department placement coordinator.
+            </div>
+
             <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1.5rem;">
                 Sign In to Portal &rarr;
             </button>
         </form>
 
+        <script>
+            function toggleForgotInfo() {
+                const box = document.getElementById('forgotInfo');
+                box.style.display = box.style.display === 'none' ? 'block' : 'none';
+            }
+        </script>
+
         <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.9rem; color: var(--text-muted);">
-            Don't have an account?
-            <a href="{% url 'student_register' %}" style="font-weight: 700; margin-left: 0.25rem;">
-                Register as a Student
-            </a>
+            <div>
+                Student without an account?
+                <a href="{% url 'student_register' %}" style="font-weight: 700; margin-left: 0.25rem;">
+                    Register as Student
+                </a>
+            </div>
+            <div style="margin-top: 0.5rem;">
+                Hiring organization?
+                <a href="{% url 'company_register' %}" style="font-weight: 700; margin-left: 0.25rem;">
+                    Register as Company
+                </a>
+            </div>
         </div>
     </div>
 </div>

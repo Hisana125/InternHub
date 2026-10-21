@@ -5,8 +5,8 @@ from .models import Student
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'phone', 'course', 'resume_link', 'created_at')
-    search_fields = ('name', 'email', 'phone', 'course')
+    list_display = ('registration_number', 'name', 'email', 'phone', 'course', 'resume_link', 'created_at')
+    search_fields = ('registration_number', 'name', 'email', 'phone', 'course')
     list_filter = ('course', 'created_at')
 
     def resume_link(self, obj):

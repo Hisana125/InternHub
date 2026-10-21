@@ -5,9 +5,17 @@ from .models import Student
 
 class StudentForm(forms.ModelForm):
     """
-    Registration form for new students.
+    Registration form for new students of MEA Engineering College.
     Creates both the Django User and the Student profile.
     """
+
+    registration_number = forms.CharField(
+        max_length=30,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'e.g. MEA22MCA001 / MEA21CS045'
+        })
+    )
 
     username = forms.CharField(
         max_length=150,
@@ -34,6 +42,7 @@ class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
         fields = [
+            'registration_number',
             'name',
             'email',
             'phone',
@@ -42,6 +51,11 @@ class StudentForm(forms.ModelForm):
         ]
 
         widgets = {
+            'registration_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. MEA22MCA001 / MEA21CS045'
+            }),
+
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter your full name'
@@ -49,7 +63,7 @@ class StudentForm(forms.ModelForm):
 
             'email': forms.EmailInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'e.g. yourname@college.edu'
+                'placeholder': 'e.g. yourname@meaec.edu.in'
             }),
 
             'phone': forms.TextInput(attrs={
@@ -57,16 +71,26 @@ class StudentForm(forms.ModelForm):
                 'placeholder': 'e.g. +91 9876543210'
             }),
 
-            'course': forms.TextInput(attrs={
+            'course': forms.Select(attrs={
                 'class': 'form-control',
-                'placeholder': 'e.g. MCA, B.Tech CSE, BCA'
-            }),
+            }, choices=[('', '-- Select Department / Course --')] + Student.COURSE_CHOICES),
 
             'resume': forms.ClearableFileInput(attrs={
                 'class': 'form-control',
                 'accept': '.pdf,.doc,.docx'
             }),
         }
+
+    def clean_registration_number(self):
+        reg_no = (self.cleaned_data.get('registration_number') or '').strip().upper()
+        if not reg_no:
+            raise forms.ValidationError('Registration number is required.')
+
+        if Student.objects.filter(registration_number__iexact=reg_no).exists():
+            raise forms.ValidationError('This registration number is already registered.')
+
+        return reg_no
+
 
     def clean_username(self):
         username = self.cleaned_data['username']
@@ -102,6 +126,7 @@ class StudentProfileEditForm(forms.ModelForm):
         model = Student
 
         fields = [
+            'registration_number',
             'name',
             'email',
             'phone',
@@ -110,6 +135,11 @@ class StudentProfileEditForm(forms.ModelForm):
         ]
 
         widgets = {
+            'registration_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. MEA22MCA001'
+            }),
+
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter full name'
@@ -125,13 +155,26 @@ class StudentProfileEditForm(forms.ModelForm):
                 'placeholder': 'Enter phone number'
             }),
 
-            'course': forms.TextInput(attrs={
+            'course': forms.Select(attrs={
                 'class': 'form-control',
-                'placeholder': 'Enter course (e.g. MCA, BCA)'
-            }),
+            }, choices=[('', '-- Select Department / Course --')] + Student.COURSE_CHOICES),
 
             'resume': forms.ClearableFileInput(attrs={
                 'class': 'form-control',
                 'accept': '.pdf,.doc,.docx'
             }),
         }
+
+    def clean_registration_number(self):
+        reg_no = (self.cleaned_data.get('registration_number') or '').strip().upper()
+        if not reg_no:
+            raise forms.ValidationError('Registration number is required.')
+
+        qs = Student.objects.filter(registration_number__iexact=reg_no)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise forms.ValidationError('This registration number is already in use by another student.')
+
+        return reg_no

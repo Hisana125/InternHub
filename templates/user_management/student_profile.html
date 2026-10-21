@@ -10,9 +10,6 @@
             <p class="page-subtitle">Your personal and academic details in InternHub</p>
         </div>
         <div style="display: flex; gap: 0.75rem;">
-            <a href="{% url 'student_edit_self' %}" class="btn btn-primary">
-                ✏️ Edit Profile
-            </a>
             <a href="{% url 'student_dashboard' %}" class="btn btn-outline">
                 &larr; Dashboard
             </a>
@@ -30,6 +27,9 @@
                     {{ student.name }}
                 </h2>
                 <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    {% if student.registration_number %}
+                        <span class="badge badge-pill" style="font-weight: 700; background: #e0f2fe; color: #0369a1;">🆔 {{ student.registration_number }}</span>
+                    {% endif %}
                     <span class="badge badge-pill" style="font-weight: 600;">🎓 {{ student.course }}</span>
                     {% if student.user %}
                         <span class="badge-pill">👤 @{{ student.user.username }}</span>
@@ -44,6 +44,16 @@
         </h3>
         <div class="detail-grid">
             <div>
+                <div class="detail-item-label">College Registration No.</div>
+                <div class="detail-item-value">
+                    <strong style="color: var(--primary);">{{ student.registration_number|default:"—" }}</strong>
+                </div>
+            </div>
+            <div>
+                <div class="detail-item-label">Institution</div>
+                <div class="detail-item-value">MEA Engineering College, Perinthalmanna</div>
+            </div>
+            <div>
                 <div class="detail-item-label">Full Name</div>
                 <div class="detail-item-value">{{ student.name }}</div>
             </div>
@@ -56,7 +66,7 @@
                 <div class="detail-item-value">{{ student.phone }}</div>
             </div>
             <div>
-                <div class="detail-item-label">Enrolled Course</div>
+                <div class="detail-item-label">Enrolled Department / Course</div>
                 <div class="detail-item-value">{{ student.course }}</div>
             </div>
             <div>

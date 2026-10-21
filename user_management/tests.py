@@ -11,6 +11,7 @@ class StudentRegistrationTests(TestCase):
 
     def test_successful_registration(self):
         data = {
+            'registration_number': 'MEA22MCA099',
             'name': 'Test Student',
             'email': 'student@test.com',
             'phone': '9876543210',
@@ -29,14 +30,38 @@ class StudentRegistrationTests(TestCase):
 
         student = Student.objects.filter(user=user).first()
         self.assertIsNotNone(student)
+        self.assertEqual(student.registration_number, 'MEA22MCA099')
         self.assertEqual(student.name, 'Test Student')
         self.assertEqual(student.course, 'MCA')
 
         # Verify welcome notification
         self.assertTrue(Notification.objects.filter(student=student).exists())
 
+    def test_registration_duplicate_registration_number(self):
+        Student.objects.create(
+            registration_number='MEA22MCA001',
+            name='Existing Reg Student',
+            email='existingreg@test.com',
+            phone='1112223334',
+            course='MCA'
+        )
+        data = {
+            'registration_number': 'MEA22MCA001',
+            'name': 'Duplicate Reg Student',
+            'email': 'dup2@test.com',
+            'phone': '9876543210',
+            'course': 'MCA',
+            'username': 'dupreguser',
+            'password': 'Password123!',
+            'confirm_password': 'Password123!',
+        }
+        response = self.client.post(reverse('student_register'), data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(username='dupreguser').exists())
+
     def test_registration_password_mismatch(self):
         data = {
+            'registration_number': 'MEA22MCA088',
             'name': 'Mismatch Student',
             'email': 'mismatch@test.com',
             'phone': '9876543210',
@@ -52,6 +77,7 @@ class StudentRegistrationTests(TestCase):
     def test_registration_duplicate_username(self):
         User.objects.create_user(username='existinguser', password='password123')
         data = {
+            'registration_number': 'MEA22MCA077',
             'name': 'Duplicate User',
             'email': 'dup@test.com',
             'phone': '9876543210',
@@ -72,6 +98,7 @@ class StudentAuthenticationTests(TestCase):
         self.user = User.objects.create_user(username='loginuser', password='Password123')
         self.student = Student.objects.create(
             user=self.user,
+            registration_number='MEA22MCA001',
             name='Login User',
             email='login@test.com',
             phone='1234567890',
@@ -107,6 +134,7 @@ class StudentProfileTests(TestCase):
         self.user = User.objects.create_user(username='profileuser', password='Password123')
         self.student = Student.objects.create(
             user=self.user,
+            registration_number='MEA22MCA010',
             name='Profile User',
             email='profile@test.com',
             phone='9876543210',
@@ -119,10 +147,12 @@ class StudentProfileTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Profile User')
         self.assertContains(response, 'MCA')
+        self.assertContains(response, 'MEA22MCA010')
 
     def test_profile_edit(self):
         # Test editing profile without requiring password
         response = self.client.post(reverse('student_edit_self'), {
+            'registration_number': 'MEA22MCA010',
             'name': 'Updated Profile Name',
             'email': 'updated@test.com',
             'phone': '9999999999',
@@ -131,6 +161,7 @@ class StudentProfileTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
         self.student.refresh_from_db()
+        self.assertEqual(self.student.registration_number, 'MEA22MCA010')
         self.assertEqual(self.student.name, 'Updated Profile Name')
         self.assertEqual(self.student.email, 'updated@test.com')
         self.assertEqual(self.student.phone, '9999999999')
@@ -143,6 +174,7 @@ class NotificationWorkflowTests(TestCase):
         self.user = User.objects.create_user(username='notifuser', password='Password123')
         self.student = Student.objects.create(
             user=self.user,
+            registration_number='MEA22MCA050',
             name='Notif User',
             email='notif@test.com',
             phone='1234567890',

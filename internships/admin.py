@@ -1,10 +1,37 @@
 from django.contrib import admin
-from .models import Internship, Application, Notification, Payment
+from .models import Internship, Application, Notification, Company
 
 # Custom Admin Site Branding
-admin.site.site_header = "InternHub Administration Portal"
-admin.site.site_title = "InternHub Admin"
-admin.site.index_title = "College Internship & Application Management"
+admin.site.site_header = "MEA Engineering College — InternHub Administration Portal"
+admin.site.site_title = "MEAEC InternHub Admin"
+admin.site.index_title = "MEA Engineering College — Internship & Campus Placement Management"
+
+
+@admin.register(Company)
+class CompanyAdmin(admin.ModelAdmin):
+    list_display = (
+        'company_name',
+        'email',
+        'phone',
+        'user',
+        'internships_count',
+        'website',
+        'created_at',
+    )
+    search_fields = (
+        'company_name',
+        'email',
+        'phone',
+        'user__username',
+    )
+    list_filter = (
+        'created_at',
+    )
+    ordering = ('-created_at',)
+
+    def internships_count(self, obj):
+        return obj.internships.count()
+    internships_count.short_description = "Internships Posted"
 
 
 @admin.register(Internship)
@@ -12,15 +39,18 @@ class InternshipAdmin(admin.ModelAdmin):
     list_display = (
         'title',
         'company_name',
+        'company',
         'location',
         'duration',
         'stipend',
+        'applicants_count',
         'application_deadline',
         'created_at',
     )
     search_fields = (
         'title',
         'company_name',
+        'company__company_name',
         'location',
         'skills_required',
     )
@@ -31,39 +61,9 @@ class InternshipAdmin(admin.ModelAdmin):
     )
     ordering = ('-created_at',)
 
-
-@admin.register(Payment)
-class PaymentAdmin(admin.ModelAdmin):
-    list_display = (
-        'id',
-        'student_name',
-        'internship_title',
-        'amount',
-        'status',
-        'payment_method',
-        'transaction_id',
-        'paid_at',
-    )
-    list_filter = (
-        'status',
-        'payment_method',
-        'paid_at',
-    )
-    search_fields = (
-        'application__student__name',
-        'application__student__email',
-        'application__internship__title',
-        'transaction_id',
-    )
-    ordering = ('-paid_at',)
-
-    def student_name(self, obj):
-        return obj.application.student.name
-    student_name.short_description = "Student"
-
-    def internship_title(self, obj):
-        return obj.application.internship.title
-    internship_title.short_description = "Internship"
+    def applicants_count(self, obj):
+        return obj.application_set.count()
+    applicants_count.short_description = "Applicants"
 
 
 @admin.register(Application)
@@ -72,12 +72,10 @@ class ApplicationAdmin(admin.ModelAdmin):
         'student',
         'internship',
         'status',
-        'payment_status_badge',
         'applied_at',
     )
     list_filter = (
         'status',
-        'payment__status',
         'internship',
         'applied_at',
     )
@@ -87,14 +85,6 @@ class ApplicationAdmin(admin.ModelAdmin):
         'internship__title',
         'internship__company_name',
     )
-
-    def payment_status_badge(self, obj):
-        if hasattr(obj, 'payment'):
-            if obj.payment.status == 'Success':
-                return f"✓ Paid (₹{obj.payment.amount})"
-            return f"⏳ Pending (₹{obj.payment.amount})"
-        return "—"
-    payment_status_badge.short_description = "Application Fee"
     ordering = ('-applied_at',)
     actions = [
         'mark_under_review',

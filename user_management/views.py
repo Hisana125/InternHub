@@ -75,12 +75,18 @@ def student_success(request):
 
 def student_login(request):
     """
-    Authenticates students and handles next-url redirects.
+    Authenticates students and companies and handles role-based redirects.
     """
     if request.user.is_authenticated:
-        return redirect('student_dashboard')
+        if hasattr(request.user, 'company'):
+            return redirect('company_dashboard')
+        elif hasattr(request.user, 'student'):
+            return redirect('student_dashboard')
+        elif request.user.is_staff:
+            return redirect('/admin/')
+        return redirect('home')
 
-    next_url = request.GET.get('next') or request.POST.get('next') or 'student_dashboard'
+    next_url = request.GET.get('next') or request.POST.get('next')
 
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -91,12 +97,20 @@ def student_login(request):
         if user is not None:
             login(request, user)
             messages.success(request, f"Welcome back, {user.username}!")
-            return redirect(next_url)
+            if next_url and next_url != 'student_dashboard':
+                return redirect(next_url)
+            if hasattr(user, 'company'):
+                return redirect('company_dashboard')
+            elif hasattr(user, 'student'):
+                return redirect('student_dashboard')
+            elif user.is_staff:
+                return redirect('/admin/')
+            return redirect('home')
         else:
             messages.error(request, 'Invalid username or password. Please try again.')
 
     return render(request, 'user_management/student_login.html', {
-        'next': next_url
+        'next': next_url or ''
     })
 
 
@@ -115,6 +129,9 @@ def student_dashboard(request):
     Student dashboard displaying comprehensive application metrics,
     recent applications, and latest notifications.
     """
+    if hasattr(request.user, 'company'):
+        return redirect('company_dashboard')
+
     try:
         student = Student.objects.get(user=request.user)
     except Student.DoesNotExist:
@@ -123,19 +140,18 @@ def student_dashboard(request):
         messages.error(request, "Student profile not found. Please contact administration.")
         return redirect('student_logout')
 
-    # Metric counts (only for submitted applications with completed payment)
-    paid_applications = Application.objects.filter(student=student, payment__status='Success')
-    pending_payment_count = Application.objects.filter(student=student, payment__status='Pending').count()
+    # Metric counts (for all student applications)
+    student_applications = Application.objects.filter(student=student)
 
-    total_applications = paid_applications.count()
-    pending_applications = paid_applications.filter(status='Pending').count()
-    under_review_applications = paid_applications.filter(status='Under Review').count()
-    shortlisted_applications = paid_applications.filter(status='Shortlisted').count()
-    selected_applications = paid_applications.filter(status='Selected').count()
-    rejected_applications = paid_applications.filter(status='Rejected').count()
+    total_applications = student_applications.count()
+    pending_applications = student_applications.filter(status='Pending').count()
+    under_review_applications = student_applications.filter(status='Under Review').count()
+    shortlisted_applications = student_applications.filter(status='Shortlisted').count()
+    selected_applications = student_applications.filter(status='Selected').count()
+    rejected_applications = student_applications.filter(status='Rejected').count()
 
     # Recent items
-    recent_applications = paid_applications.select_related('internship').order_by('-applied_at')[:5]
+    recent_applications = student_applications.select_related('internship').order_by('-applied_at')[:5]
     recent_notifications = Notification.objects.filter(student=student).order_by('-created_at')[:5]
 
     return render(request, 'user_management/student_dashboard.html', {
@@ -146,7 +162,6 @@ def student_dashboard(request):
         'shortlisted_applications': shortlisted_applications,
         'selected_applications': selected_applications,
         'rejected_applications': rejected_applications,
-        'pending_payment_count': pending_payment_count,
         'recent_applications': recent_applications,
         'recent_notifications': recent_notifications,
     })
@@ -158,6 +173,9 @@ def student_profile(request, id=None):
     View student profile details and statistics.
     Ensures students view their own profile.
     """
+    if hasattr(request.user, 'company'):
+        return redirect('company_dashboard')
+
     try:
         current_student = Student.objects.get(user=request.user)
     except Student.DoesNotExist:
@@ -173,8 +191,8 @@ def student_profile(request, id=None):
     else:
         student = current_student
 
-    applications_count = Application.objects.filter(student=student, payment__status='Success').count()
-    selected_count = Application.objects.filter(student=student, payment__status='Success', status='Selected').count()
+    applications_count = Application.objects.filter(student=student).count()
+    selected_count = Application.objects.filter(student=student, status='Selected').count()
 
     return render(request, 'user_management/student_profile.html', {
         'student': student,
@@ -189,6 +207,9 @@ def student_edit(request, id=None):
     Edit student profile information using StudentProfileEditForm.
     Restricted to the logged-in student for their own record.
     """
+    if hasattr(request.user, 'company'):
+        return redirect('company_dashboard')
+
     try:
         student = Student.objects.get(user=request.user)
     except Student.DoesNotExist:
@@ -219,6 +240,9 @@ def student_notifications(request):
     """
     View notifications for the logged in student with unread indicators.
     """
+    if hasattr(request.user, 'company'):
+        return redirect('company_dashboard')
+
     try:
         student = Student.objects.get(user=request.user)
     except Student.DoesNotExist:

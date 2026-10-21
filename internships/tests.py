@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.contrib.auth.models import User
 from user_management.models import Student
-from internships.models import Internship, Application, Notification
+from internships.models import Internship, Application, Notification, Company
 from internships.admin import ApplicationAdmin
 from django.contrib.admin.sites import AdminSite
 
@@ -98,26 +98,14 @@ class ApplicationWorkflowTests(TestCase):
         )
         self.client.login(username='applicant', password='Password123')
 
-    def test_successful_application_and_payment(self):
-        # 1. Apply initializes application and pending payment
-        response = self.client.post(reverse('apply_internship', args=[self.internship.id]))
-        self.assertEqual(response.status_code, 302)
+    def test_successful_free_application(self):
+        # 1. Apply creates application directly with Pending status
+        response = self.client.post(reverse('apply_internship', args=[self.internship.id]), follow=True)
+        self.assertEqual(response.status_code, 200)
 
         app = Application.objects.filter(student=self.student, internship=self.internship).first()
         self.assertIsNotNone(app)
         self.assertEqual(app.status, 'Pending')
-        self.assertTrue(hasattr(app, 'payment'))
-        self.assertEqual(app.payment.status, 'Pending')
-
-        # 2. Complete payment
-        pay_response = self.client.post(reverse('payment_page', args=[app.id]), {
-            'payment_method': 'UPI / QR Code'
-        }, follow=True)
-        self.assertEqual(pay_response.status_code, 200)
-
-        app.payment.refresh_from_db()
-        self.assertEqual(app.payment.status, 'Success')
-        self.assertIsNotNone(app.payment.transaction_id)
 
         # Check Notification dispatched to student
         self.assertTrue(Notification.objects.filter(
@@ -125,21 +113,9 @@ class ApplicationWorkflowTests(TestCase):
             message__icontains=self.internship.title
         ).exists())
 
-    def test_pending_payment_recovery(self):
-        # Apply creates pending payment
-        self.client.post(reverse('apply_internship', args=[self.internship.id]))
-        app = Application.objects.get(student=self.student, internship=self.internship)
-
-        # Student re-visits apply page while payment is pending
-        response = self.client.get(reverse('apply_internship', args=[self.internship.id]))
-        self.assertRedirects(response, reverse('payment_page', args=[app.id]))
-
     def test_duplicate_application_prevention(self):
-        # Apply once and pay
+        # Apply once
         self.client.post(reverse('apply_internship', args=[self.internship.id]))
-        app = Application.objects.get(student=self.student, internship=self.internship)
-        self.client.post(reverse('payment_page', args=[app.id]), {'payment_method': 'Card'})
-
         self.assertEqual(Application.objects.filter(student=self.student, internship=self.internship).count(), 1)
 
         # Apply again - should redirect to my_applications without creating duplicate
@@ -197,6 +173,184 @@ class AdminActionTests(TestCase):
         request = type('Request', (), {'user': self.user})()
         self.admin.save_model(request, self.app, form=None, change=True)
 
+        notif = Notification.objects.filter(
+            student=self.student,
+            message__icontains='Shortlisted'
+        ).first()
+        self.assertIsNotNone(notif)
+
+
+class CompanyWorkflowTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.today = timezone.now().date()
+
+        # Create a company user
+        self.company_user = User.objects.create_user(
+            username='innovatetech',
+            password='CompanyPassword123',
+            email='contact@innovate.com'
+        )
+        self.company = Company.objects.create(
+            user=self.company_user,
+            company_name='InnovateTech Solutions',
+            email='contact@innovate.com',
+            phone='9876543210',
+            address='Infopark, Kochi',
+            website='https://innovatetech.com',
+            description='IT & Product development'
+        )
+
+        # Create a student user
+        self.student_user = User.objects.create_user(
+            username='student1',
+            password='StudentPassword123',
+            email='student1@test.com'
+        )
+        self.student = Student.objects.create(
+            user=self.student_user,
+            name='First Student',
+            email='student1@test.com',
+            phone='9123456780',
+            course='MCA'
+        )
+
+        # Create an internship posted by company
+        self.internship = Internship.objects.create(
+            company=self.company,
+            company_name=self.company.company_name,
+            title='Backend Python Developer',
+            description='Work on microservices with Django and FastAPI.',
+            location='Kochi, Kerala',
+            duration='3 Months',
+            stipend='₹15,000 / month',
+            skills_required='Python, Django, SQL',
+            application_deadline=self.today + timedelta(days=20)
+        )
+
+    def test_company_registration_success(self):
+        response = self.client.post(reverse('company_register'), {
+            'company_name': 'NextGen Corp',
+            'email': 'hr@nextgen.com',
+            'phone': '9988776655',
+            'address': 'Cyberpark, Kozhikode',
+            'website': 'https://nextgen.com',
+            'description': 'AI and Cloud Solutions',
+            'username': 'nextgencorp',
+            'password': 'Password123!',
+            'confirm_password': 'Password123!',
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Company.objects.filter(company_name='NextGen Corp').exists())
+        self.assertTrue(User.objects.filter(username='nextgencorp').exists())
+        self.assertRedirects(response, reverse('company_dashboard'))
+
+    def test_company_login_redirects_to_company_dashboard(self):
+        response = self.client.post(reverse('student_login'), {
+            'username': 'innovatetech',
+            'password': 'CompanyPassword123'
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, reverse('company_dashboard'))
+        self.assertContains(response, 'InnovateTech Solutions')
+
+    def test_student_cannot_access_company_dashboard(self):
+        self.client.login(username='student1', password='StudentPassword123')
+        response = self.client.get(reverse('company_dashboard'), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, reverse('student_dashboard'))
+
+    def test_company_cannot_apply_for_internship(self):
+        self.client.login(username='innovatetech', password='CompanyPassword123')
+        response = self.client.post(reverse('apply_internship', args=[self.internship.id]), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Application.objects.filter(internship=self.internship).exists())
+
+    def test_company_post_internship(self):
+        self.client.login(username='innovatetech', password='CompanyPassword123')
+        response = self.client.post(reverse('company_post_internship'), {
+            'title': 'Frontend Vue.js Intern',
+            'description': 'Build responsive interfaces using Vue 3.',
+            'location': 'Kochi, Kerala',
+            'duration': '3 Months',
+            'stipend': '₹12,000 / month',
+            'skills_required': 'Vue.js, JavaScript, CSS3',
+            'application_deadline': self.today + timedelta(days=25),
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        new_internship = Internship.objects.filter(title='Frontend Vue.js Intern').first()
+        self.assertIsNotNone(new_internship)
+        self.assertEqual(new_internship.company, self.company)
+        self.assertEqual(new_internship.company_name, self.company.company_name)
+
+    def test_past_deadline_validation_on_post_internship(self):
+        self.client.login(username='innovatetech', password='CompanyPassword123')
+        past_date = self.today - timedelta(days=5)
+        response = self.client.post(reverse('company_post_internship'), {
+            'title': 'Invalid Past Internship',
+            'description': 'Description with invalid date.',
+            'location': 'Kochi',
+            'duration': '1 Month',
+            'stipend': '₹5,000',
+            'skills_required': 'Testing',
+            'application_deadline': past_date,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Internship.objects.filter(title='Invalid Past Internship').exists())
+        self.assertFormError(response, 'form', 'application_deadline', 'Application deadline cannot be in the past.')
+
+    def test_company_view_all_applicants(self):
+        Application.objects.create(
+            student=self.student,
+            internship=self.internship,
+            status='Pending'
+        )
+
+        second_user = User.objects.create_user(username='secondstudent', password='Password123')
+        second_student = Student.objects.create(
+            user=second_user,
+            registration_number='MEA22MCA098',
+            name='Second Student',
+            email='second@test.com',
+            phone='9999999999',
+            course='MCA'
+        )
+        Application.objects.create(
+            student=second_student,
+            internship=self.internship,
+            status='Pending'
+        )
+
+        self.client.login(username='innovatetech', password='CompanyPassword123')
+        response = self.client.get(reverse('company_view_applicants', args=[self.internship.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'First Student')
+        self.assertContains(response, 'Second Student')
+
+    def test_company_update_applicant_status_dispatches_notification(self):
+        app = Application.objects.create(
+            student=self.student,
+            internship=self.internship,
+            status='Pending'
+        )
+
+        self.client.login(username='innovatetech', password='CompanyPassword123')
+        response = self.client.post(
+            reverse('company_update_application_status', args=[app.id]),
+            {'status': 'Shortlisted'},
+            follow=True
+        )
+
+        self.assertEqual(response.status_code, 200)
+        app.refresh_from_db()
+        self.assertEqual(app.status, 'Shortlisted')
+
+        # Verify student received notification
         notif = Notification.objects.filter(
             student=self.student,
             message__icontains='Shortlisted'

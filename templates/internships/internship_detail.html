@@ -27,10 +27,6 @@
                         <span class="badge badge-{{ existing_application.status|lower }}" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
                             Status: {{ existing_application.status }}
                         </span>
-                    {% elif is_payment_pending %}
-                        <span class="badge badge-pending" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
-                            ⏳ Fee Payment Pending
-                        </span>
                     {% elif is_expired %}
                         <span class="badge badge-rejected" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
                             Applications Closed
@@ -117,19 +113,6 @@
                         View Application Status &rarr;
                     </a>
                 </div>
-            {% elif is_payment_pending %}
-                <div style="display: inline-block; text-align: left; max-width: 540px; margin-bottom: 1.25rem;">
-                    <div class="alert alert-warning" style="margin-bottom: 0;">
-                        <span>
-                            ⏳ <strong>Payment Pending:</strong> You have an application waiting for the ₹500 fee payment. Complete payment to finalize submission.
-                        </span>
-                    </div>
-                </div>
-                <div>
-                    <a href="{% url 'payment_page' existing_application.id %}" class="btn btn-primary btn-lg">
-                        Complete Payment (₹500) &rarr;
-                    </a>
-                </div>
             {% elif is_expired %}
                 <div class="alert alert-warning" style="display: inline-flex; margin-bottom: 1rem;">
                     <span>⚠️ The deadline for this internship closed on {{ internship.application_deadline|date:"F d, Y" }}. Applications are no longer accepted.</span>
@@ -138,6 +121,21 @@
                     <a href="{% url 'internship_list' %}" class="btn btn-outline">
                         Browse Other Openings
                     </a>
+            {% elif is_owner_company %}
+                <div class="alert alert-info" style="display: inline-flex; margin-bottom: 1.25rem;">
+                    <span>🏢 You published this internship posting as <strong>{{ internship.company_name }}</strong>.</span>
+                </div>
+                <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                    <a href="{% url 'company_view_applicants' internship.id %}" class="btn btn-primary btn-lg">
+                        👥 Review Applicants &rarr;
+                    </a>
+                    <a href="{% url 'company_edit_internship' internship.id %}" class="btn btn-outline btn-lg">
+                        ✏️ Edit Posting
+                    </a>
+                </div>
+            {% elif is_company_user %}
+                <div class="alert alert-info" style="display: inline-flex; margin-bottom: 0;">
+                    <span>🏢 Logged in with an Employer account. Application submissions are reserved for students.</span>
                 </div>
             {% elif user.is_authenticated %}
                 <h4 style="font-size: 1.2rem; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem;">

@@ -1,13 +1,225 @@
 import uuid
+from functools import wraps
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db import models
+from django.contrib.auth.models import User
+from django.contrib.auth import login, logout
+from django.db import models, transaction
+from django.db.models import Count, Q
 from django.utils import timezone
 
-from .models import Internship, Application, Notification, Payment
+from .models import Internship, Application, Notification, Company
+from .forms import CompanyRegistrationForm, InternshipForm, CompanyProfileEditForm
 from user_management.models import Student
 
+
+def company_required(view_func):
+    """
+    Decorator ensuring that only authenticated users with a registered
+    Company profile can access the view.
+    """
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect(f"{reverse('student_login')}?next={request.path}")
+        if not hasattr(request.user, 'company'):
+            messages.error(request, "Access restricted to registered company accounts.")
+            if hasattr(request.user, 'student'):
+                return redirect('student_dashboard')
+            return redirect('home')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
+def company_register(request):
+    if request.user.is_authenticated:
+        if hasattr(request.user, 'company'):
+            return redirect('company_dashboard')
+        elif hasattr(request.user, 'student'):
+            return redirect('student_dashboard')
+        return redirect('home')
+
+    if request.method == 'POST':
+        form = CompanyRegistrationForm(request.POST)
+
+        if form.is_valid():
+            with transaction.atomic():
+                username = form.cleaned_data['username']
+                password = form.cleaned_data['password']
+
+                user = User.objects.create_user(
+                    username=username,
+                    password=password,
+                    email=form.cleaned_data['email']
+                )
+
+                company = form.save(commit=False)
+                company.user = user
+                company.save()
+
+            login(request, user)
+
+            messages.success(
+                request,
+                f"Welcome to InternHub, {company.company_name}! "
+                "Your company account has been created."
+            )
+
+            return redirect('company_dashboard')
+
+    else:
+        form = CompanyRegistrationForm()
+
+    return render(
+        request,
+        'internships/company_register.html',
+        {'form': form}
+    )
+
+
+@company_required
+def company_dashboard(request):
+    company = request.user.company
+
+    internships = Internship.objects.filter(
+        company=company
+    ).annotate(
+        applicants_count=Count('application')
+    ).order_by('-created_at')
+
+    today = timezone.now().date()
+    total_postings = internships.count()
+    active_postings = internships.filter(application_deadline__gte=today).count()
+    total_applicants = Application.objects.filter(
+        internship__company=company
+    ).count()
+    selected_applicants = Application.objects.filter(
+        internship__company=company,
+        status='Selected'
+    ).count()
+
+    return render(
+        request,
+        'internships/company_dashboard.html',
+        {
+            'company': company,
+            'internships': internships,
+            'total_postings': total_postings,
+            'active_postings': active_postings,
+            'total_applicants': total_applicants,
+            'selected_applicants': selected_applicants,
+            'today': today,
+        }
+    )
+
+
+@company_required
+def company_post_internship(request):
+    company = request.user.company
+
+    if request.method == 'POST':
+        form = InternshipForm(request.POST)
+
+        if form.is_valid():
+            internship = form.save(commit=False)
+            internship.company = company
+            internship.company_name = company.company_name
+            internship.save()
+
+            messages.success(
+                request,
+                f"Internship '{internship.title}' has been posted successfully!"
+            )
+            return redirect('company_dashboard')
+
+    else:
+        form = InternshipForm()
+
+    return render(
+        request,
+        'internships/company_post_internship.html',
+        {
+            'form': form,
+            'company': company,
+            'is_edit': False,
+        }
+    )
+
+
+@company_required
+def company_edit_internship(request, id):
+    company = request.user.company
+    internship = get_object_or_404(Internship, id=id, company=company)
+
+    if request.method == 'POST':
+        form = InternshipForm(request.POST, instance=internship)
+        if form.is_valid():
+            internship = form.save(commit=False)
+            internship.company = company
+            internship.company_name = company.company_name
+            internship.save()
+
+            messages.success(
+                request,
+                f"Internship '{internship.title}' has been updated successfully!"
+            )
+            return redirect('company_dashboard')
+    else:
+        form = InternshipForm(instance=internship)
+
+    return render(
+        request,
+        'internships/company_post_internship.html',
+        {
+            'form': form,
+            'company': company,
+            'internship': internship,
+            'is_edit': True,
+        }
+    )
+
+
+@company_required
+def company_delete_internship(request, id):
+    company = request.user.company
+    internship = get_object_or_404(Internship, id=id, company=company)
+
+    if request.method == 'POST':
+        title = internship.title
+        internship.delete()
+        messages.success(request, f"Internship '{title}' was deleted successfully.")
+    else:
+        messages.warning(request, "Deletion requires confirmation.")
+
+    return redirect('company_dashboard')
+
+
+@company_required
+def company_profile_edit(request):
+    company = request.user.company
+
+    if request.method == 'POST':
+        form = CompanyProfileEditForm(request.POST, instance=company)
+        if form.is_valid():
+            form.save()
+            request.user.email = company.email
+            request.user.save()
+
+            messages.success(request, "Company profile updated successfully!")
+            return redirect('company_dashboard')
+    else:
+        form = CompanyProfileEditForm(instance=company)
+
+    return render(
+        request,
+        'internships/company_profile_edit.html',
+        {
+            'form': form,
+            'company': company,
+        }
+    )
 
 def internship_list(request):
     """
@@ -35,23 +247,15 @@ def internship_list(request):
     # Distinct locations for dropdown filter
     locations = Internship.objects.values_list('location', flat=True).distinct()
 
-    # Track applied and pending-payment internships for logged-in student
+    # Track applied internships for logged-in student
     applied_internship_ids = set()
-    pending_payment_internship_ids = set()
 
     if request.user.is_authenticated:
         try:
             student = Student.objects.get(user=request.user)
             applied_internship_ids = set(
                 Application.objects.filter(
-                    student=student,
-                    payment__status='Success'
-                ).values_list('internship_id', flat=True)
-            )
-            pending_payment_internship_ids = set(
-                Application.objects.filter(
-                    student=student,
-                    payment__status='Pending'
+                    student=student
                 ).values_list('internship_id', flat=True)
             )
         except Student.DoesNotExist:
@@ -65,10 +269,94 @@ def internship_list(request):
         'location_filter': location_filter,
         'locations': locations,
         'applied_internship_ids': applied_internship_ids,
-        'pending_payment_internship_ids': pending_payment_internship_ids,
         'today': today,
         'total_count': internships.count(),
     })
+
+
+@company_required
+def company_view_applicants(request, id):
+    company = request.user.company
+
+    internship = get_object_or_404(
+        Internship,
+        id=id,
+        company=company
+    )
+
+    applications = Application.objects.filter(
+        internship=internship
+    ).select_related(
+        'student',
+        'internship'
+    ).order_by('-applied_at')
+
+    return render(
+        request,
+        'internships/company_view_applicants.html',
+        {
+            'company': company,
+            'internship': internship,
+            'applications': applications,
+        }
+    )
+
+
+@company_required
+def company_update_application_status(request, id):
+    # Only accept form submissions
+    if request.method != 'POST':
+        return redirect('company_dashboard')
+
+    company = request.user.company
+
+    # Find an application belonging to this company's internship
+    application = get_object_or_404(
+        Application,
+        id=id,
+        internship__company=company
+    )
+
+    new_status = request.POST.get('status', '').strip()
+
+    # Accept only statuses defined in the Application model
+    valid_statuses = dict(Application.STATUS_CHOICES)
+
+    if new_status not in valid_statuses:
+        messages.error(request, "Please select a valid application status.")
+        return redirect(
+            'company_view_applicants',
+            id=application.internship.id
+        )
+
+    old_status = application.status
+
+    if new_status == old_status:
+        messages.info(request, "The application already has this status.")
+    else:
+        application.status = new_status
+        application.save(update_fields=['status'])
+
+        # Notify the student about the status change
+        Notification.objects.create(
+            student=application.student,
+            message=(
+                f"Your application for '{application.internship.title}' "
+                f"at {company.company_name} has been updated from "
+                f"'{old_status}' to '{new_status}'."
+            )
+        )
+
+        messages.success(
+            request,
+            f"Application status updated to '{new_status}'. "
+            "The student has been notified."
+        )
+
+    return redirect(
+        'company_view_applicants',
+        id=application.internship.id
+    )
 
 
 def internship_detail(request, id):
@@ -81,22 +369,25 @@ def internship_detail(request, id):
     is_expired = internship.application_deadline < today
 
     existing_application = None
-    is_payment_pending = False
-    is_payment_success = False
+    already_applied = False
+    is_owner_company = False
+    is_company_user = False
 
     if request.user.is_authenticated:
-        try:
-            student = Student.objects.get(user=request.user)
-            existing_application = Application.objects.filter(
-                student=student,
-                internship=internship
-            ).first()
-
-            if existing_application and hasattr(existing_application, 'payment'):
-                is_payment_pending = existing_application.payment.status == 'Pending'
-                is_payment_success = existing_application.payment.status == 'Success'
-        except Student.DoesNotExist:
-            pass
+        if hasattr(request.user, 'company'):
+            is_company_user = True
+            if internship.company == request.user.company:
+                is_owner_company = True
+        else:
+            try:
+                student = Student.objects.get(user=request.user)
+                existing_application = Application.objects.filter(
+                    student=student,
+                    internship=internship
+                ).first()
+                already_applied = existing_application is not None
+            except Student.DoesNotExist:
+                pass
 
     # Convert comma-separated skills to a list for badge rendering
     skills_list = [s.strip() for s in internship.skills_required.split(',') if s.strip()]
@@ -106,8 +397,9 @@ def internship_detail(request, id):
         'skills_list': skills_list,
         'is_expired': is_expired,
         'existing_application': existing_application,
-        'already_applied': is_payment_success,
-        'is_payment_pending': is_payment_pending,
+        'already_applied': already_applied,
+        'is_owner_company': is_owner_company,
+        'is_company_user': is_company_user,
         'today': today,
     })
 
@@ -115,10 +407,14 @@ def internship_detail(request, id):
 @login_required
 def apply_internship(request, id):
     """
-    Handles application initialization and redirects to demo application fee payment.
-    Ensures students who abandon payment can resume seamlessly.
+    Handles 100% free application submission for MEA Engineering College students.
+    Directly creates the application and notifies the student.
     """
     internship = get_object_or_404(Internship, id=id)
+
+    if hasattr(request.user, 'company'):
+        messages.warning(request, "Company accounts cannot apply for internships.")
+        return redirect('internship_detail', id=internship.id)
 
     try:
         student = Student.objects.get(user=request.user)
@@ -140,33 +436,32 @@ def apply_internship(request, id):
     ).first()
 
     if existing_application:
-        if hasattr(existing_application, 'payment') and existing_application.payment.status == 'Pending':
-            messages.info(request, "You already started an application for this internship. Please complete your payment.")
-            return redirect('payment_page', id=existing_application.id)
-        else:
-            messages.info(request, f"You have already applied for '{internship.title}'.")
-            return redirect('my_applications')
+        messages.info(request, f"You have already applied for '{internship.title}'.")
+        return redirect('my_applications')
 
     skills_list = [s.strip() for s in internship.skills_required.split(',') if s.strip()]
 
     # When student clicks Confirm Application
     if request.method == 'POST':
-        # Create application in Pending review state
         application = Application.objects.create(
             student=student,
             internship=internship,
             status='Pending'
         )
 
-        # Create corresponding pending fee payment
-        Payment.objects.create(
-            application=application,
-            amount=500.00,
-            status='Pending'
+        Notification.objects.create(
+            student=student,
+            message=(
+                f'Your application for "{internship.title}" at {internship.company_name} '
+                f'has been submitted successfully.'
+            )
         )
 
-        # Redirect to demo payment page
-        return redirect('payment_page', id=application.id)
+        messages.success(
+            request,
+            f'Your application for "{internship.title}" has been submitted successfully!'
+        )
+        return redirect('my_applications')
 
     return render(request, 'internships/apply_internship.html', {
         'internship': internship,
@@ -176,95 +471,13 @@ def apply_internship(request, id):
 
 
 @login_required
-def payment_page(request, id):
-    """
-    Displays the demo payment gateway page with payment method options.
-    Simulates secure payment and transitions application to submitted.
-    """
-    try:
-        student = Student.objects.get(user=request.user)
-    except Student.DoesNotExist:
-        messages.error(request, "Student profile required.")
-        return redirect('student_dashboard')
-
-    application = get_object_or_404(
-        Application,
-        id=id,
-        student=student
-    )
-
-    payment = get_object_or_404(
-        Payment,
-        application=application
-    )
-
-    # If already paid, redirect straight to receipt
-    if payment.status == 'Success':
-        return redirect('payment_success', id=payment.id)
-
-    if request.method == 'POST':
-        selected_method = request.POST.get('payment_method', 'UPI / Online')
-
-        # Generate unique transaction ID
-        payment.transaction_id = f"TXN-{uuid.uuid4().hex[:8].upper()}"
-        payment.payment_method = selected_method
-        payment.status = 'Success'
-        payment.paid_at = timezone.now()
-        payment.save()
-
-        # Send official confirmation notification
-        Notification.objects.create(
-            student=student,
-            message=(
-                f'Payment of ₹{payment.amount:.2f} for "{application.internship.title}" '
-                f'at {application.internship.company_name} was successful. '
-                f'(Txn ID: {payment.transaction_id}). Your application has been submitted.'
-            )
-        )
-
-        messages.success(request, "Application fee payment completed successfully! Your application is now submitted.")
-        return redirect('payment_success', id=payment.id)
-
-    return render(request, 'internships/payment.html', {
-        'application': application,
-        'payment': payment,
-        'internship': application.internship,
-        'student': student,
-    })
-
-
-@login_required
-def payment_success(request, id):
-    """
-    Displays the payment receipt and confirmation page.
-    """
-    try:
-        student = Student.objects.get(user=request.user)
-    except Student.DoesNotExist:
-        messages.error(request, "Student profile required.")
-        return redirect('student_dashboard')
-
-    payment = get_object_or_404(
-        Payment,
-        id=id,
-        application__student=student,
-        status='Success'
-    )
-
-    return render(request, 'internships/payment_success.html', {
-        'payment': payment,
-        'application': payment.application,
-        'internship': payment.application.internship,
-        'student': student,
-    })
-
-
-@login_required
 def my_applications(request):
     """
-    Displays submitted applications (with successful payment) as well as
-    any pending payments requiring completion.
+    Displays all submitted applications for the logged-in student.
     """
+    if hasattr(request.user, 'company'):
+        return redirect('company_dashboard')
+
     try:
         student = Student.objects.get(user=request.user)
     except Student.DoesNotExist:
@@ -273,30 +486,17 @@ def my_applications(request):
 
     status_filter = request.GET.get('status', '').strip()
 
-    # Completed & paid applications
     applications = Application.objects.filter(
-        student=student,
-        payment__status='Success'
-    ).select_related('internship', 'payment').order_by('-applied_at')
+        student=student
+    ).select_related('internship').order_by('-applied_at')
 
     if status_filter:
         applications = applications.filter(status=status_filter)
 
-    # Incomplete/unpaid applications
-    pending_payment_apps = Application.objects.filter(
-        student=student,
-        payment__status='Pending'
-    ).select_related('internship', 'payment').order_by('-applied_at')
-
-    total_count = Application.objects.filter(
-        student=student,
-        payment__status='Success'
-    ).count()
+    total_count = Application.objects.filter(student=student).count()
 
     return render(request, 'internships/my_applications.html', {
         'applications': applications,
-        'pending_payment_apps': pending_payment_apps,
-        'pending_payment_count': pending_payment_apps.count(),
         'status_filter': status_filter,
         'total_count': total_count,
     })
@@ -308,6 +508,9 @@ def withdraw_application(request, id):
     Allows a student to withdraw an application in Pending review status
     or cancel an unpaid pending application.
     """
+    if hasattr(request.user, 'company'):
+        return redirect('company_dashboard')
+
     try:
         student = Student.objects.get(user=request.user)
         application = get_object_or_404(Application, id=id, student=student)

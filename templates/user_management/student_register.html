@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Student Registration — InternHub{% endblock %}
+{% block title %}Student Registration — MEA Engineering College — InternHub{% endblock %}
 
 {% block content %}
 <div class="container-sm" style="margin-top: 1.5rem;">
@@ -14,7 +14,7 @@
             </h1>
 
             <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 0.35rem;">
-                Register to browse technical internships and track your applications
+                Register as an MEA Engineering College student to access verified internships and campus placement drives
             </p>
         </div>
 
@@ -34,6 +34,19 @@
                 </div>
             {% endif %}
 
+            <!-- College Registration Number -->
+            <div class="form-group">
+                <label for="{{ form.registration_number.id_for_label }}" class="form-label">
+                    College Registration / Roll Number *
+                </label>
+                {{ form.registration_number }}
+                {% if form.registration_number.errors %}
+                    <div class="errorlist">{{ form.registration_number.errors }}</div>
+                {% endif %}
+                <span class="form-help">
+                    e.g. MEA22MCA001 / MEA21CS045 (as per MEA Engineering College KTU records)
+                </span>
+            </div>
 
             <!-- Name and Email -->
             <div

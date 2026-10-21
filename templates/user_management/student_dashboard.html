@@ -12,7 +12,7 @@
                 Welcome back, {{ student.name }}! 👋
             </h1>
             <p style="color: rgba(255,255,255,0.85); font-size: 0.95rem;">
-                Department of Computer Applications &bull; <strong>{{ student.course }}</strong> &bull; {{ student.email }}
+                MEA Engineering College &bull; <strong>{{ student.course }}</strong>{% if student.registration_number %} &bull; Reg No: <strong>{{ student.registration_number }}</strong>{% endif %}
             </p>
         </div>
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
@@ -25,16 +25,6 @@
         </div>
     </div>
 
-    {% if pending_payment_count > 0 %}
-        <div class="alert alert-warning" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-            <span>
-                ⏳ You have <strong>{{ pending_payment_count }}</strong> incomplete application{{ pending_payment_count|pluralize }} waiting for the ₹500 fee payment.
-            </span>
-            <a href="{% url 'my_applications' %}" class="btn btn-primary btn-sm" style="white-space: nowrap;">
-                Complete Payment Now &rarr;
-            </a>
-        </div>
-    {% endif %}
 
     <!-- Application Status Analytics Metrics -->
     <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--dark); margin-bottom: 1rem;">
@@ -169,6 +159,16 @@
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+                    {% if student.registration_number %}
+                    <div>
+                        <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block;">REGISTRATION NUMBER</span>
+                        <strong style="color: var(--primary);">{{ student.registration_number }}</strong>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block;">COLLEGE</span>
+                        <span>MEA Engineering College</span>
+                    </div>
                     <div>
                         <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block;">FULL NAME</span>
                         <strong>{{ student.name }}</strong>
@@ -184,6 +184,24 @@
                     <div>
                         <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block;">ENROLLED COURSE</span>
                         <span class="badge-pill" style="font-weight: 600;">{{ student.course }}</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block;">RESUME / CV</span>
+                        {% if student.resume %}
+                            <span style="color: var(--status-selected); font-weight: 600; font-size: 0.88rem;">
+                                ✓ Uploaded
+                            </span>
+                            <a href="{{ student.resume.url }}" target="_blank" rel="noopener noreferrer" style="font-size: 0.8rem; text-decoration: underline; margin-left: 0.35rem;">
+                                (Preview)
+                            </a>
+                        {% else %}
+                            <span style="color: #E11D48; font-weight: 600; font-size: 0.88rem;">
+                                ⚠️ Not Uploaded
+                            </span>
+                            <a href="{% url 'student_edit_self' %}" style="font-size: 0.8rem; text-decoration: underline; margin-left: 0.35rem;">
+                                (Upload)
+                            </a>
+                        {% endif %}
                     </div>
                     <div>
                         <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block;">REGISTERED ON</span>

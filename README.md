@@ -40,15 +40,28 @@ Traditional college internship tracking often relies on disconnected Google Form
 1. **`user_management_student`**:
    - `id` (Primary Key, INT)
    - `user_id` (OneToOneField -> `auth_user`, CASCADE)
+   - `registration_number` (VARCHAR 30, Unique KTU/College Registration ID)
    - `name` (VARCHAR 100, Full Name)
    - `email` (EmailField)
    - `phone` (VARCHAR 15)
-   - `course` (VARCHAR 100, e.g. MCA, B.Tech CSE, BCA)
+   - `course` (VARCHAR 100, MEA Engineering College KTU Degree/Branch)
    - `resume` (FileField, stored in `media/resumes/`)
    - `created_at` (DateTimeField)
 
-2. **`internships_internship`**:
+2. **`internships_company`**:
    - `id` (Primary Key, INT)
+   - `user_id` (OneToOneField -> `auth_user`, CASCADE)
+   - `company_name` (VARCHAR 200, Employer / Company Name)
+   - `email` (EmailField)
+   - `phone` (VARCHAR 20)
+   - `website` (URLField, optional)
+   - `address` (TEXT)
+   - `description` (TEXT)
+   - `created_at` (DateTimeField)
+
+3. **`internships_internship`**:
+   - `id` (Primary Key, INT)
+   - `company_id` (ForeignKey -> `Company`, CASCADE, optional)
    - `title` (VARCHAR 200, Role Title)
    - `company_name` (VARCHAR 200)
    - `description` (TEXT)
@@ -59,22 +72,14 @@ Traditional college internship tracking often relies on disconnected Google Form
    - `application_deadline` (DateField)
    - `created_at` (DateTimeField)
 
-3. **`internships_application`**:
+4. **`internships_application`**:
    - `id` (Primary Key, INT)
    - `student_id` (ForeignKey -> `Student`, CASCADE)
    - `internship_id` (ForeignKey -> `Internship`, CASCADE)
    - `applied_at` (DateTimeField)
    - `status` (VARCHAR 20, Choices: *Pending*, *Under Review*, *Shortlisted*, *Selected*, *Rejected*)
    - *Constraint*: `unique_student_internship_application` (ensures single application per role)
-
-4. **`internships_payment`**:
-   - `id` (Primary Key, INT)
-   - `application_id` (OneToOneField -> `Application`, CASCADE)
-   - `amount` (DecimalField, e.g. ₹500.00)
-   - `status` (VARCHAR 20, Choices: *Pending*, *Success*)
-   - `payment_method` (VARCHAR 50, e.g. UPI, Card, Net Banking)
-   - `transaction_id` (VARCHAR 100, Unique reference ID)
-   - `paid_at` (DateTimeField)
+   - *Cost*: 100% Free of charge for college students
 
 5. **`internships_notification`**:
    - `id` (Primary Key, INT)

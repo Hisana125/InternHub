@@ -21,14 +21,30 @@
 
     <div class="card">
         {% if students %}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+                <input
+                    type="text"
+                    id="studentSearch"
+                    onkeyup="filterStudents()"
+                    placeholder="🔍 Filter by name, reg number, or course..."
+                    class="form-control"
+                    style="max-width: 360px;"
+                >
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                    Showing <strong id="studentCount">{{ students|length }}</strong> student{{ students|length|pluralize }}
+                </div>
+            </div>
+
             <div class="table-responsive">
-                <table class="data-table">
+                <table class="data-table" id="studentTable">
                     <thead>
                         <tr>
+                            <th>Reg. No.</th>
                             <th>Student Name</th>
                             <th>Email Address</th>
                             <th>Phone</th>
                             <th>Course</th>
+                            <th>Resume</th>
                             <th>Registered On</th>
                             <th>Actions</th>
                         </tr>
@@ -36,6 +52,13 @@
                     <tbody>
                         {% for student in students %}
                             <tr>
+                                <td>
+                                    {% if student.registration_number %}
+                                        <code style="color: var(--primary); font-weight: 700; font-size: 0.88rem;">{{ student.registration_number }}</code>
+                                    {% else %}
+                                        <span style="color: var(--text-muted);">—</span>
+                                    {% endif %}
+                                </td>
                                 <td>
                                     <strong>{{ student.name }}</strong>
                                     {% if student.user %}
@@ -48,6 +71,15 @@
                                 <td>{{ student.phone }}</td>
                                 <td>
                                     <span class="badge-pill">{{ student.course }}</span>
+                                </td>
+                                <td>
+                                    {% if student.resume %}
+                                        <a href="{{ student.resume.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                                            📄 CV
+                                        </a>
+                                    {% else %}
+                                        <span style="color: var(--text-muted); font-size: 0.8rem;">—</span>
+                                    {% endif %}
                                 </td>
                                 <td>{{ student.created_at|date:"M d, Y" }}</td>
                                 <td>
@@ -68,6 +100,30 @@
                     </tbody>
                 </table>
             </div>
+
+            <script>
+                function filterStudents() {
+                    const input = document.getElementById('studentSearch');
+                    const filter = input.value.toLowerCase();
+                    const table = document.getElementById('studentTable');
+                    const tr = table.getElementsByTagName('tr');
+                    let visibleCount = 0;
+
+                    for (let i = 1; i < tr.length; i++) {
+                        const text = tr[i].textContent || tr[i].innerText;
+                        if (text.toLowerCase().indexOf(filter) > -1) {
+                            tr[i].style.display = '';
+                            visibleCount++;
+                        } else {
+                            tr[i].style.display = 'none';
+                        }
+                    }
+                    const countElem = document.getElementById('studentCount');
+                    if (countElem) {
+                        countElem.textContent = visibleCount;
+                    }
+                }
+            </script>
         {% else %}
             <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
                 <p>No students have registered yet.</p>
