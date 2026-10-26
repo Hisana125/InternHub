@@ -350,12 +350,12 @@ def create_10_slide_presentation():
     add_header(s5, "Slide 5 • Features", "Core Features", "Key capabilities designed for students and administrators")
 
     feats = [
-        ("🔐 Student Login & Profiles", "Simple sign-up and secure login. Students can view and update their personal and academic details anytime."),
-        ("🔍 Smart Job Search", "Fast search bar to filter internships by job title, company name, location, or required programming skills."),
-        ("⚡ 1-Click Application", "Instant application submission that connects the student's profile directly to the chosen internship."),
-        ("📊 Student Dashboard", "Clear dashboard showing counts for Total Applied, Pending, Selected, and Rejected applications."),
-        ("🔔 Notification Alerts", "Built-in notification center with an unread badge that informs students whenever their status changes."),
-        ("🛠️ Admin Control Panel", "Dedicated admin panel for staff to post internships, review registered students, and update application results.")
+        ("🔐 Dual-Portal Authentication", "Separate secure logins for students (KTU credentials) and verified corporate recruiters/companies."),
+        ("🔍 Smart Search & Filtering", "Dynamic search bar to filter opportunities by title, skills, stipend, location, and application deadline."),
+        ("⚡ 1-Click Application System", "Instant application workflow that automatically attaches verified student profile & uploaded PDF resume."),
+        ("📊 Role-Based Dashboards", "Tailored dashboards for students (application tracking) and recruiters (job listings & candidate evaluation)."),
+        ("🔔 Real-Time Notification Center", "Instant in-app alerts notifying students whenever their application review status is updated."),
+        ("🛠️ College Placement Admin", "Comprehensive administrative control center to audit recruitment drives, manage students, and view analytics.")
     ]
 
     for idx, (head, body) in enumerate(feats):
@@ -390,132 +390,327 @@ def create_10_slide_presentation():
     # =========================================================================
     s6 = prs.slides.add_slide(blank_layout)
     set_bg(s6)
-    add_header(s6, "Slide 6 • System Structure", "Module Description", "The 3 main functional modules of the InternHub project")
+    add_header(s6, "Slide 6 • System Structure", "Module Description", "Three integrated functional modules designed for Students, Recruiters, and College Placement Admin")
 
     modules = [
-        ("👤 Module 1: User Management", NAVY, [
-            ("Student Registration:", " Students sign up with username, password, email, phone, and course."),
-            ("Secure Authentication:", " Login and logout protected by Django's password security."),
-            ("Profile Management:", " Students can view and update their contact details."),
-            ("Personal Dashboard:", " Shows live summary cards of application progress.")
-        ]),
-        ("💼 Module 2: Internship Portal", ACCENT_BLUE, [
-            ("Job Listings:", " Displays company name, role, stipend, location, duration, and deadline."),
-            ("Keyword Search:", " Search across job titles, company names, cities, and required skills."),
-            ("Details Page:", " Full job description and requirements with an 'Apply' button."),
-            ("Chronological Order:", " Newest internships always appear at the top.")
-        ]),
-        ("📋 Module 3: Application & Alerts", GREEN, [
-            ("1-Click Apply:", " Links the student profile to the selected internship."),
-            ("Anti-Duplicate Rule:", " Prevents student from submitting twice to the same opening."),
-            ("Status Tracking:", " Shows statuses: Pending, Under Review, Shortlisted, Selected, Rejected."),
-            ("In-App Notifications:", " Informs students as soon as coordinator updates their status.")
-        ])
+        ("🎓 Module 1: Student Portal", NAVY, "ACTOR: REGISTERED STUDENTS", [
+            ("Academic Onboarding:", " Students register with KTU Reg No, MCA/B.Tech course branch, contact info, and upload PDF resume."),
+            ("Job Discovery & Search:", " Search vacancies with dynamic multi-filters across technical skills, stipend, location, and deadlines."),
+            ("1-Click Digital Apply:", " Submits application in one click, automatically binding verified academic profile and resume."),
+            ("Anti-Duplicate Guard:", " Enforces database unique constraints to prevent accidental duplicate applications."),
+            ("Live Progress Tracking:", " Real-time dashboard showing application status (Pending, Under Review, Shortlisted, Selected, Rejected).")
+        ], "⚡ Outcome: Seamless 1-click apply & full transparency"),
+
+        ("🏢 Module 2: Recruiter / Company Portal", ACCENT_BLUE, "ACTOR: CORPORATE RECRUITERS", [
+            ("Company Registration:", " Corporate sign-up with company name, recruiter credentials, industry, website, and office address."),
+            ("Internship Publishing:", " Recruiters post job drives with roles, stipend, duration, required skill tags, and deadline dates."),
+            ("Applicant Screening:", " Inspect candidate roster, review academic credentials, and download student PDF resumes."),
+            ("Status Transition Engine:", " Move applicants through evaluation states (Under Review ➔ Shortlisted ➔ Selected / Rejected)."),
+            ("Recruiter Analytics:", " Monitor applicant counts, track drive performance, and manage active internship postings.")
+        ], "⚡ Outcome: Accelerated candidate review & hiring"),
+
+        ("🛡️ Module 3: Placement Admin & Governance", GREEN, "ACTOR: COLLEGE PLACEMENT CELL", [
+            ("Student Verification:", " Validate student registration numbers and course details against college institutional records."),
+            ("Corporate Oversight:", " Moderate registered company profiles and audit postings to ensure legitimate campus opportunities."),
+            ("Application Auditing:", " Centralized oversight over all campus recruitment drives, department stats, and placement history."),
+            ("Notification Dispatch:", " System-wide trigger engine that automatically dispatches in-app alerts upon status changes."),
+            ("Access Control & Security:", " Django Admin panel with role-based access, session security, and MySQL database integrity.")
+        ], "⚡ Outcome: 100% Campus placement governance & security")
     ]
 
-    for idx, (title, col, items) in enumerate(modules):
+    for idx, (title, col, role_badge, items, footer_tag) in enumerate(modules):
         x = Inches(0.8 + idx * 3.98)
-        y = Inches(2.0)
+        y = Inches(1.95)
         w = Inches(3.8)
-        h = Inches(4.9)
+        h = Inches(4.95)
 
         card = add_card(s6, x, y, w, h)
         tf = card.text_frame
         tf.word_wrap = True
-        tf.margin_left = tf.margin_right = Inches(0.28)
-        tf.margin_top = Inches(0.25)
+        tf.margin_left = tf.margin_right = Inches(0.24)
+        tf.margin_top = Inches(0.18)
 
+        # Title
         p = tf.paragraphs[0]
         p.text = title
-        p.font.size = Pt(14)
+        p.font.size = Pt(13)
         p.font.bold = True
         p.font.color.rgb = col
 
+        # Role Badge
+        p = tf.add_paragraph()
+        p.text = role_badge
+        p.font.size = Pt(9)
+        p.font.bold = True
+        p.font.color.rgb = TEXT_MUTED
+        p.space_before = Pt(2)
+
+        # Bullet Items
         for h_item, b_item in items:
             p = tf.add_paragraph()
             p.text = f"• {h_item} {b_item}"
-            p.font.size = Pt(10.5)
+            p.font.size = Pt(9.5)
             p.font.color.rgb = TEXT_DARK
-            p.space_before = Pt(10)
+            p.space_before = Pt(5)
+
+        # Mini footer highlight inside card
+        f_box = s6.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.95 + idx * 3.98), Inches(6.35), Inches(3.5), Inches(0.42))
+        f_box.fill.solid()
+        f_box.fill.fore_color.rgb = RGBColor(241, 245, 249)
+        f_box.line.color.rgb = col
+        f_box.line.width = Pt(1)
+
+        tf_f = f_box.text_frame
+        tf_f.word_wrap = True
+        tf_f.margin_left = tf_f.margin_right = Inches(0.12)
+        tf_f.margin_top = Inches(0.06)
+        p_f = tf_f.paragraphs[0]
+        p_f.text = footer_tag
+        p_f.font.size = Pt(8.8)
+        p_f.font.bold = True
+        p_f.font.color.rgb = col
+        p_f.alignment = PP_ALIGN.CENTER
 
 
     # =========================================================================
-    # SLIDE 7: Database Tables
+    # SLIDE 7: Project Workflow (End-to-End Multi-Tier Process)
     # =========================================================================
     s7 = prs.slides.add_slide(blank_layout)
     set_bg(s7)
-    add_header(s7, "Slide 7 • Database", "Database Tables", "The 4 core tables used to store and manage project data")
+    add_header(s7, "Slide 7 • System Workflow", "Project Workflow", "End-to-end operational lifecycle connecting Students, Recruiters, and College Placement Admin")
 
-    tables = [
-        ("1. Student Table (user_management_student)", NAVY, [
-            ("id:", " Unique student ID (Primary Key)"),
-            ("user_id:", " Links to Django Auth User login"),
-            ("name, email, phone:", " Contact details of the student"),
-            ("course:", " Enrolled course (e.g., MCA, B.Tech)")
+    phases = [
+        ("01", "Registration & Setup", NAVY, "👤 Student & Recruiter", [
+            ("Student Onboarding:", " Students register with KTU Reg No, MCA/B.Tech course, contact details & PDF resume upload."),
+            ("Company Account:", " Recruiter registers corporate profile with website, contact person & company description."),
+            ("Account Verification:", " Django authentication validates accounts for secure role-based dashboard access.")
         ]),
-        ("2. Internship Table (internships_internship)", ACCENT_BLUE, [
-            ("id:", " Unique internship ID (Primary Key)"),
-            ("title & company_name:", " Job role and hiring company"),
-            ("location, duration, stipend:", " Work terms & pay"),
-            ("skills_required & deadline:", " Skill requirements & last date")
+        ("02", "Vacancy Posting", ACCENT_BLUE, "🏢 Recruiter & Placement", [
+            ("Drive Creation:", " Recruiter posts role details, monthly stipend, duration, location & required skill tags."),
+            ("Deadline Scheduling:", " Strict application deadline set to organize candidate intake systematically."),
+            ("Portal Publishing:", " Vacancies are validated and broadcast across the college student network.")
         ]),
-        ("3. Application Table (internships_application)", GREEN, [
-            ("id:", " Unique application ID (Primary Key)"),
-            ("student_id & internship_id:", " Foreign Keys connecting student to job"),
-            ("applied_at:", " Date and time of application"),
-            ("status:", " Pending, Shortlisted, Selected, or Rejected"),
-            ("* Unique Rule:", " A student cannot apply twice for the same job")
+        ("03", "1-Click Application", GREEN, "🎓 College Student", [
+            ("Skill-Based Search:", " Students filter opportunities by programming skills, stipend, and deadlines."),
+            ("1-Click Digital Apply:", " Submits application instantly linking student profile & uploaded PDF resume."),
+            ("Anti-Duplicate Rule:", " Database uniquely prevents multiple applications to the same opportunity.")
         ]),
-        ("4. Notification Table (internships_notification)", RGBColor(217, 119, 6), [
-            ("id:", " Unique notification ID (Primary Key)"),
-            ("student_id:", " Target student receiving the alert"),
-            ("message:", " Alert text (e.g., 'Application Submitted')"),
-            ("is_read:", " True/False (Tracks unread messages)")
+        ("04", "Screening & Alerts", RGBColor(124, 58, 237), "💼 Recruiter ➔ Student", [
+            ("Resume Evaluation:", " Recruiter views applicant roster, reviews qualifications, and downloads resumes."),
+            ("Status Progression:", " Moves candidates through Pending ➔ Under Review ➔ Shortlisted ➔ Selected."),
+            ("Real-Time Dispatch:", " System dispatches instant in-app notification alerts directly to the student.")
         ])
     ]
 
-    for idx, (t_title, t_col, t_fields) in enumerate(tables):
-        r = idx // 2
-        c = idx % 2
-        x = Inches(0.8 + c * 5.95)
-        y = Inches(2.0 + r * 2.5)
-        w = Inches(5.78)
-        h = Inches(2.35)
+    for idx, (p_num, p_title, p_col, p_role, p_points) in enumerate(phases):
+        x = Inches(0.8 + idx * 2.98)
+        y = Inches(1.95)
+        w = Inches(2.78)
+        h = Inches(3.55)
 
         card = add_card(s7, x, y, w, h)
         tf = card.text_frame
         tf.word_wrap = True
-        tf.margin_left = tf.margin_right = Inches(0.25)
-        tf.margin_top = Inches(0.2)
+        tf.margin_left = tf.margin_right = Inches(0.20)
+        tf.margin_top = Inches(0.18)
+
+        # Step Number & Title
+        p = tf.paragraphs[0]
+        p.text = f"PHASE {p_num} • {p_title.upper()}"
+        p.font.size = Pt(10.5)
+        p.font.bold = True
+        p.font.color.rgb = p_col
+
+        # Role Badge
+        p = tf.add_paragraph()
+        p.text = p_role
+        p.font.size = Pt(9.5)
+        p.font.bold = True
+        p.font.color.rgb = TEXT_MUTED
+        p.space_before = Pt(2)
+
+        # Points
+        for h_pt, b_pt in p_points:
+            p = tf.add_paragraph()
+            p.text = f"• {h_pt} {b_pt}"
+            p.font.size = Pt(9.5)
+            p.font.color.rgb = TEXT_DARK
+            p.space_before = Pt(6)
+
+        # Connector between cards (except last card)
+        if idx < 3:
+            conn_box = s7.shapes.add_textbox(Inches(0.8 + idx * 2.98 + 2.78), Inches(3.4), Inches(0.20), Inches(0.4))
+            tf_conn = conn_box.text_frame
+            tf_conn.word_wrap = False
+            tf_conn.margin_left = tf_conn.margin_right = tf_conn.margin_top = tf_conn.margin_bottom = 0
+            p_conn = tf_conn.paragraphs[0]
+            p_conn.text = "➔"
+            p_conn.font.size = Pt(14)
+            p_conn.font.bold = True
+            p_conn.font.color.rgb = ACCENT_BLUE
+            p_conn.alignment = PP_ALIGN.CENTER
+
+    # Bottom Progression Banner (Status Lifecycle Pipeline)
+    c_pipe = add_card(s7, Inches(0.8), Inches(5.65), Inches(11.72), Inches(1.42), RGBColor(255, 255, 255), CARD_BORDER)
+    tf_p = c_pipe.text_frame
+    tf_p.word_wrap = True
+    tf_p.margin_left = tf_p.margin_right = Inches(0.25)
+    tf_p.margin_top = Inches(0.12)
+
+    p = tf_p.paragraphs[0]
+    p.text = "📌 APPLICATION LIFECYCLE & STATUS PROGRESSION PIPELINE"
+    p.font.size = Pt(11)
+    p.font.bold = True
+    p.font.color.rgb = NAVY
+
+    status_boxes = [
+        ("1. Pending", RGBColor(217, 119, 6), "Student submitted application; timestamp recorded, duplicate check verified, awaiting review."),
+        ("2. Under Review", ACCENT_BLUE, "Recruiter or Placement Coordinator is examining academic profile and candidate resume."),
+        ("3. Shortlisted", RGBColor(124, 58, 237), "Student cleared preliminary screening; invited for interview or online evaluation."),
+        ("4. Selected / Rejected", GREEN, "Final hiring decision updated; automated real-time notification alert dispatched to student.")
+    ]
+
+    for s_idx, (s_title, s_col, s_desc) in enumerate(status_boxes):
+        sx = Inches(1.0 + s_idx * 2.85)
+        sy = Inches(6.05)
+        sw = Inches(2.70)
+        sh = Inches(0.92)
+
+        s_shape = s7.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, sx, sy, sw, sh)
+        s_shape.fill.solid()
+        s_shape.fill.fore_color.rgb = RGBColor(248, 250, 252)
+        s_shape.line.color.rgb = s_col
+        s_shape.line.width = Pt(1)
+
+        s_tf = s_shape.text_frame
+        s_tf.word_wrap = True
+        s_tf.margin_left = s_tf.margin_right = Inches(0.12)
+        s_tf.margin_top = Inches(0.08)
+
+        p = s_tf.paragraphs[0]
+        p.text = s_title
+        p.font.size = Pt(10)
+        p.font.bold = True
+        p.font.color.rgb = s_col
+
+        p = s_tf.add_paragraph()
+        p.text = s_desc
+        p.font.size = Pt(8.5)
+        p.font.color.rgb = TEXT_DARK
+        p.space_before = Pt(2)
+
+
+    # =========================================================================
+    # SLIDE 8: Database Tables
+    # =========================================================================
+    s8 = prs.slides.add_slide(blank_layout)
+    set_bg(s8)
+    add_header(s8, "Slide 8 • Database", "Database Tables", "The 5 core relational tables used to store and manage project data")
+
+    tables_row1 = [
+        ("1. Student Table (user_management_student)", NAVY, [
+            ("id:", " Unique student ID (Primary Key)"),
+            ("user_id:", " Links to Django Auth User login"),
+            ("registration_number:", " Unique KTU College Reg No"),
+            ("name, email, phone:", " Contact details of the student"),
+            ("course & resume:", " Degree branch & PDF resume file")
+        ]),
+        ("2. Company Table (internships_company)", RGBColor(124, 58, 237), [
+            ("id:", " Unique company ID (Primary Key)"),
+            ("user_id:", " Links to Django Auth User login"),
+            ("company_name & email:", " Organization identity & email"),
+            ("phone & website:", " Recruiter contact & web URL"),
+            ("address & description:", " Physical office & company info")
+        ]),
+        ("3. Internship Table (internships_internship)", ACCENT_BLUE, [
+            ("id:", " Unique internship ID (Primary Key)"),
+            ("company_id:", " Foreign Key linking to Company"),
+            ("title & company_name:", " Role title & hiring organization"),
+            ("location, duration, stipend:", " Work terms & monthly pay"),
+            ("skills_required & deadline:", " Skill criteria & last apply date")
+        ])
+    ]
+
+    for idx, (t_title, t_col, t_fields) in enumerate(tables_row1):
+        x = Inches(0.8 + idx * 3.98)
+        y = Inches(1.95)
+        w = Inches(3.78)
+        h = Inches(2.35)
+
+        card = add_card(s8, x, y, w, h)
+        tf = card.text_frame
+        tf.word_wrap = True
+        tf.margin_left = tf.margin_right = Inches(0.22)
+        tf.margin_top = Inches(0.18)
 
         p = tf.paragraphs[0]
         p.text = t_title
-        p.font.size = Pt(13)
+        p.font.size = Pt(11.5)
         p.font.bold = True
         p.font.color.rgb = t_col
 
         for f_name, f_desc in t_fields:
             p = tf.add_paragraph()
             p.text = f"• {f_name}{f_desc}"
-            p.font.size = Pt(10.5)
+            p.font.size = Pt(9.8)
+            p.font.color.rgb = TEXT_DARK
+            p.space_before = Pt(3)
+
+    tables_row2 = [
+        ("4. Application Table (internships_application)", GREEN, [
+            ("id:", " Unique application ID (Primary Key)"),
+            ("student_id & internship_id:", " Foreign Keys linking student profile to internship opening"),
+            ("applied_at & status:", " Application timestamp and state (Pending, Under Review, Shortlisted, Selected, Rejected)"),
+            ("* Unique Constraint:", " (student_id, internship_id) prevents duplicate applications for the same opening")
+        ]),
+        ("5. Notification Table (internships_notification)", RGBColor(217, 119, 6), [
+            ("id:", " Unique notification ID (Primary Key)"),
+            ("student_id:", " Foreign Key targeting the student receiving the alert"),
+            ("message:", " Automated alert text dispatched upon recruiter status updates"),
+            ("is_read & created_at:", " Read state tracking boolean and real-time generation timestamp")
+        ])
+    ]
+
+    for idx, (t_title, t_col, t_fields) in enumerate(tables_row2):
+        x = Inches(0.8 + idx * 5.95)
+        y = Inches(4.50)
+        w = Inches(5.77)
+        h = Inches(2.40)
+
+        card = add_card(s8, x, y, w, h)
+        tf = card.text_frame
+        tf.word_wrap = True
+        tf.margin_left = tf.margin_right = Inches(0.25)
+        tf.margin_top = Inches(0.20)
+
+        p = tf.paragraphs[0]
+        p.text = t_title
+        p.font.size = Pt(12)
+        p.font.bold = True
+        p.font.color.rgb = t_col
+
+        for f_name, f_desc in t_fields:
+            p = tf.add_paragraph()
+            p.text = f"• {f_name}{f_desc}"
+            p.font.size = Pt(10)
             p.font.color.rgb = TEXT_DARK
             p.space_before = Pt(4)
 
 
     # =========================================================================
-    # SLIDE 8: Technology Stack Used
+    # SLIDE 9: Technology Stack Used
     # =========================================================================
-    s8 = prs.slides.add_slide(blank_layout)
-    set_bg(s8)
-    add_header(s8, "Slide 8 • Tech Stack", "Technology Stack Used", "Programming language, database, framework, and tools used")
+    s9 = prs.slides.add_slide(blank_layout)
+    set_bg(s9)
+    add_header(s9, "Slide 9 • Tech Stack", "Technology Stack Used", "Programming language, database, framework, and tools used")
 
     tech_items = [
-        ("🐍 Programming Language", "Python 3.9+", "Primary backend language. Chosen because it is clean, easy to read, and has great web framework support."),
-        ("🌐 Web Framework", "Django 4.2 LTS", "A robust Python web framework that comes with built-in security, user authentication, and admin panel."),
-        ("🗄️ Relational Database", "MySQL Database", "MySQL is the active database storing all student records, job postings, applications, and notifications."),
-        ("🎨 Frontend (UI)", "HTML5 & CSS3", "Clean and responsive user interface with card layouts that look great on both desktop screens and mobile phones."),
-        ("📦 Libraries & Drivers", "mysqlclient & Forms", "mysqlclient (MySQLdb) connects Django to MySQL. Django Forms handles user input validation."),
-        ("💻 Development Tools", "VS Code & Git", "Visual Studio Code used as the code editor, and Git used for source code version management.")
+        ("🐍 Programming Language", "Python 3.9+", "Primary backend language. Chosen because it is clean, easy to read, and has robust web framework support."),
+        ("🌐 Web Framework", "Django 4.2 LTS", "A robust Python web framework providing built-in security, user authentication, ORM, and admin panel."),
+        ("🗄️ Relational Database", "MySQL Database", "MySQL is the active database storing student records, company profiles, job postings, applications, and alerts."),
+        ("🎨 Frontend (UI)", "HTML5 & CSS3", "Clean, responsive user interface with modern card layouts optimized for desktop, tablet, and mobile browsers."),
+        ("📦 Libraries & Drivers", "mysqlclient & Forms", "mysqlclient (MySQLdb) connects Django to MySQL. Django Forms handles strict server-side validation."),
+        ("💻 Development Tools", "VS Code & Git", "Visual Studio Code used as primary code editor, with Git utilized for source code version management.")
     ]
 
     for idx, (t_title, t_sub, t_desc) in enumerate(tech_items):
@@ -526,7 +721,7 @@ def create_10_slide_presentation():
         w = Inches(3.8)
         h = Inches(2.3)
 
-        card = add_card(s8, x, y, w, h)
+        card = add_card(s9, x, y, w, h)
         tf = card.text_frame
         tf.word_wrap = True
         tf.margin_left = tf.margin_right = Inches(0.25)
@@ -553,19 +748,19 @@ def create_10_slide_presentation():
 
 
     # =========================================================================
-    # SLIDE 9: Future Enhancements
+    # SLIDE 10: Future Enhancements
     # =========================================================================
-    s9 = prs.slides.add_slide(blank_layout)
-    set_bg(s9)
-    add_header(s9, "Slide 9 • Roadmap", "Future Enhancements", "Useful features that can be added in future versions")
+    s10 = prs.slides.add_slide(blank_layout)
+    set_bg(s10)
+    add_header(s10, "Slide 10 • Roadmap", "Future Enhancements", "Useful features and extensions designed for future production releases")
 
     enhances = [
         ("🤖 AI Resume Parser & Matcher", "Automatically scan student PDF resumes, extract technical skills, and recommend the best-fitting internships."),
-        ("🏢 Direct Company/Recruiter Login", "Allow hiring managers from companies to post their own internships and shortlist students directly."),
-        ("📩 Automated Email & SMS Alerts", "Send instant email and SMS messages to students when an interview is scheduled or an application is accepted."),
-        ("📅 Integrated Interview Scheduling", "Add an in-app calendar to schedule interview dates and connect with Google Meet or Zoom."),
-        ("📱 Mobile Application", "Develop an Android and iOS mobile app using Flutter so students can apply and check alerts on their phones."),
-        ("🎓 Digital Completion Certificates", "Automatically generate verified digital certificates for students upon successful completion of their internship.")
+        ("🏢 Recruiter Interview Scheduler", "Add an in-app calendar to schedule interview rounds and integrate with Google Meet or Zoom."),
+        ("📩 Automated Email & SMS Alerts", "Send automated email and SMS messages to students when an interview is scheduled or status changes."),
+        ("📊 Placement Analytics & Export", "Generate downloadable placement PDF/Excel reports and analytics for college accreditation records."),
+        ("📱 Native Mobile Application", "Develop an Android and iOS mobile app using Flutter so students can receive push notifications on mobile."),
+        ("🎓 Digital Completion Certificates", "Automatically issue verifiable, cryptographically signed digital completion certificates upon finishing internships.")
     ]
 
     for idx, (head, body) in enumerate(enhances):
@@ -576,7 +771,7 @@ def create_10_slide_presentation():
         w = Inches(3.8)
         h = Inches(2.3)
 
-        card = add_card(s9, x, y, w, h)
+        card = add_card(s10, x, y, w, h)
         tf = card.text_frame
         tf.word_wrap = True
         tf.margin_left = tf.margin_right = Inches(0.25)
@@ -596,18 +791,18 @@ def create_10_slide_presentation():
 
 
     # =========================================================================
-    # SLIDE 10: Conclusion & Thank You
+    # SLIDE 11: Conclusion & Thank You
     # =========================================================================
-    s10 = prs.slides.add_slide(blank_layout)
-    set_bg(s10, DARK_BLUE)
+    s11 = prs.slides.add_slide(blank_layout)
+    set_bg(s11, DARK_BLUE)
 
-    top_strip10 = s10.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.333), Inches(0.12))
-    top_strip10.fill.solid()
-    top_strip10.fill.fore_color.rgb = ACCENT_BLUE
-    top_strip10.line.fill.background()
+    top_strip11 = s11.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.333), Inches(0.12))
+    top_strip11.fill.solid()
+    top_strip11.fill.fore_color.rgb = ACCENT_BLUE
+    top_strip11.line.fill.background()
 
     # Left: Conclusion Summary Card
-    c_concl = add_card(s10, Inches(1.0), Inches(1.2), Inches(5.4), Inches(5.2), RGBColor(30, 41, 59), RGBColor(51, 65, 85))
+    c_concl = add_card(s11, Inches(1.0), Inches(1.2), Inches(5.4), Inches(5.2), RGBColor(30, 41, 59), RGBColor(51, 65, 85))
     tf_cc = c_concl.text_frame
     tf_cc.word_wrap = True
     tf_cc.margin_left = tf_cc.margin_right = Inches(0.35)
@@ -620,10 +815,10 @@ def create_10_slide_presentation():
     p.font.color.rgb = RGBColor(147, 197, 253)
 
     concl_points = [
-        ("Solves a Real Problem:", " Replaces slow, manual paper circulars with an easy, centralized website."),
-        ("Empowers Students:", " Provides full transparency with 1-click apply, real-time status tracking, and instant alerts."),
-        ("Reduces Staff Workload:", " Cuts down coordinator effort and completely prevents duplicate applications."),
-        ("Clean Architecture:", " Built on Django's proven MVT architecture with a safe, normalized MySQL database.")
+        ("Solves a Real Campus Problem:", " Replaces slow, manual circulars and scattered WhatsApp messages with a unified, transparent portal."),
+        ("Empowers College Students:", " Direct 1-click applications, resume linkage, live tracking, and instantaneous status notifications."),
+        ("Empowers Companies & Admins:", " Recruiters easily manage drives and evaluate candidates; placement cell gains complete audit oversight."),
+        ("Solid Engineering Foundation:", " Built on Django's proven MVT architecture with a robust, normalized MySQL relational database.")
     ]
     for h, b in concl_points:
         p = tf_cc.add_paragraph()
@@ -633,7 +828,7 @@ def create_10_slide_presentation():
         p.space_before = Pt(14)
 
     # Right: Thank You Box
-    c_ty = add_card(s10, Inches(6.9), Inches(1.2), Inches(5.4), Inches(5.2), RGBColor(30, 41, 59), RGBColor(51, 65, 85))
+    c_ty = add_card(s11, Inches(6.9), Inches(1.2), Inches(5.4), Inches(5.2), RGBColor(30, 41, 59), RGBColor(51, 65, 85))
     tf_ty = c_ty.text_frame
     tf_ty.word_wrap = True
     tf_ty.margin_left = tf_ty.margin_right = Inches(0.35)
@@ -668,14 +863,29 @@ def create_10_slide_presentation():
     p.alignment = PP_ALIGN.CENTER
     p.space_before = Pt(20)
 
-    output_filename = "InternHub_College_Internship_Management_Presentation.pptx"
-    try:
-        prs.save(output_filename)
-        print(f"Presentation saved successfully as '{output_filename}' ({len(prs.slides)} slides)")
-    except PermissionError:
-        alt_filename = "InternHub_Project_Presentation_10_Slides.pptx"
-        prs.save(alt_filename)
-        print(f"Primary file was open in PowerPoint. Presentation saved as '{alt_filename}' ({len(prs.slides)} slides)")
+    # Attempt to save to multiple standard presentation filenames
+    filenames_to_save = [
+        "InternHub_Final_Presentation.pptx",
+        "InternHub_College_Internship_Management_Presentation.pptx",
+        "InternHub_Project_Presentation_Final.pptx",
+        "InternHub_Project_Presentation_Updated.pptx",
+        "InternHub_Project_Presentation_10_Slides.pptx"
+    ]
+    saved_files = []
+    for fname in filenames_to_save:
+        try:
+            prs.save(fname)
+            saved_files.append(fname)
+            print(f"Presentation saved successfully as '{fname}' ({len(prs.slides)} slides)")
+        except PermissionError:
+            print(f"Notice: '{fname}' is currently locked by another application. Skipping.")
+
+    if not saved_files:
+        fallback = "InternHub_Presentation_New.pptx"
+        prs.save(fallback)
+        print(f"Saved to fallback file '{fallback}' ({len(prs.slides)} slides)")
+
+create_presentation = create_10_slide_presentation
 
 if __name__ == "__main__":
     create_10_slide_presentation()

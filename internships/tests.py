@@ -356,3 +356,141 @@ class CompanyWorkflowTests(TestCase):
             message__icontains='Shortlisted'
         ).first()
         self.assertIsNotNone(notif)
+
+
+from internships.forms import CompanyRegistrationForm, InternshipForm, CompanyProfileEditForm
+
+
+class CompanyAndInternshipFieldValidationTests(TestCase):
+    def setUp(self):
+        self.today = timezone.now().date()
+        self.valid_company_data = {
+            'company_name': 'ValidTech Solutions',
+            'username': 'validtech',
+            'email': 'hr@validtech.com',
+            'phone': '+91 9876543210',
+            'address': 'Infopark Phase 2, Kakkanad, Kochi',
+            'website': 'https://validtech.com',
+            'description': 'IT services and AI development',
+            'password': 'SecureCompanyPass123!',
+            'confirm_password': 'SecureCompanyPass123!',
+        }
+
+        self.valid_internship_data = {
+            'title': 'Full Stack Django Developer',
+            'description': 'Develop scalable backend microservices and responsive frontends.',
+            'location': 'Kochi, Kerala',
+            'duration': '6 Months',
+            'stipend': '₹18,000 / month',
+            'skills_required': 'Python, Django, PostgreSQL, HTML5',
+            'application_deadline': self.today + timedelta(days=25),
+        }
+
+    def test_valid_company_form_passes(self):
+        form = CompanyRegistrationForm(data=self.valid_company_data)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['phone'], '9876543210')
+        self.assertEqual(form.cleaned_data['email'], 'hr@validtech.com')
+
+    def test_short_or_invalid_company_name_rejected(self):
+        data = self.valid_company_data.copy()
+        data['company_name'] = 'A'  # Too short
+        form = CompanyRegistrationForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('company_name', form.errors)
+
+        data['company_name'] = '###$$$'  # No alphanumeric chars
+        form = CompanyRegistrationForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('company_name', form.errors)
+
+    def test_duplicate_company_name_rejected(self):
+        user = User.objects.create_user(username='origcompany', password='Pass1234Password')
+        Company.objects.create(
+            user=user,
+            company_name='ValidTech Solutions',
+            email='orig@validtech.com',
+            phone='9876543210',
+            address='Kochi'
+        )
+        data = self.valid_company_data.copy()
+        data['username'] = 'anotheruser'
+        data['email'] = 'unique@validtech.com'
+        form = CompanyRegistrationForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('company_name', form.errors)
+
+    def test_invalid_company_phone_rejected(self):
+        data = self.valid_company_data.copy()
+        data['phone'] = '123'  # Too short
+        form = CompanyRegistrationForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('phone', form.errors)
+
+        data['phone'] = '1234567890'  # Starts with 1
+        form = CompanyRegistrationForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('phone', form.errors)
+
+    def test_short_company_address_rejected(self):
+        data = self.valid_company_data.copy()
+        data['address'] = 'USA'  # Less than 5 chars
+        form = CompanyRegistrationForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('address', form.errors)
+
+    def test_website_url_auto_scheme_and_validation(self):
+        # Accepts valid URLs
+        data = self.valid_company_data.copy()
+        data['website'] = 'https://www.mycompany.org'
+        form = CompanyRegistrationForm(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['website'], 'https://www.mycompany.org')
+
+        # Invalid URL format rejected
+        data['website'] = 'not-a-valid-url-@@@'
+        form = CompanyRegistrationForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('website', form.errors)
+
+    def test_company_password_validation(self):
+        data = self.valid_company_data.copy()
+        data['password'] = 'short'
+        data['confirm_password'] = 'short'
+        form = CompanyRegistrationForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('password', form.errors)
+
+    def test_valid_internship_form_passes(self):
+        form = InternshipForm(data=self.valid_internship_data)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['title'], 'Full Stack Django Developer')
+
+    def test_short_internship_title_rejected(self):
+        data = self.valid_internship_data.copy()
+        data['title'] = 'AI'  # Less than 3 chars
+        form = InternshipForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('title', form.errors)
+
+    def test_short_internship_description_rejected(self):
+        data = self.valid_internship_data.copy()
+        data['description'] = 'Short text'  # Less than 15 chars
+        form = InternshipForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('description', form.errors)
+
+    def test_past_application_deadline_rejected(self):
+        data = self.valid_internship_data.copy()
+        data['application_deadline'] = self.today - timedelta(days=1)
+        form = InternshipForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('application_deadline', form.errors)
+
+    def test_skills_required_formatting(self):
+        data = self.valid_internship_data.copy()
+        data['skills_required'] = ' Python  ,  Django ,   PostgreSQL  '
+        form = InternshipForm(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['skills_required'], 'Python, Django, PostgreSQL')
+

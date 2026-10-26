@@ -212,3 +212,117 @@ class NotificationWorkflowTests(TestCase):
         response = self.client.get(reverse('delete_notification', args=[self.notif1.id]))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Notification.objects.filter(id=self.notif1.id).exists())
+
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+from user_management.forms import StudentForm, StudentProfileEditForm
+
+
+class StudentFieldValidationTests(TestCase):
+    def setUp(self):
+        self.valid_data = {
+            'registration_number': 'MEA22MCA100',
+            'name': 'Valid Student',
+            'email': 'valid@meaec.edu.in',
+            'phone': '+91 9876543210',
+            'course': 'MCA',
+            'username': 'validstudent',
+            'password': 'SecurePassword123!',
+            'confirm_password': 'SecurePassword123!',
+        }
+
+    def test_valid_student_form_passes(self):
+        form = StudentForm(data=self.valid_data)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['phone'], '9876543210')
+        self.assertEqual(form.cleaned_data['email'], 'valid@meaec.edu.in')
+
+    def test_invalid_name_rejected(self):
+        # Digits only in name
+        data = self.valid_data.copy()
+        data['name'] = '123456'
+        form = StudentForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('name', form.errors)
+
+        # Symbols only in name
+        data['name'] = '@@$$%%'
+        form = StudentForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('name', form.errors)
+
+    def test_invalid_phone_rejected(self):
+        data = self.valid_data.copy()
+        data['phone'] = '123'  # Too short
+        form = StudentForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('phone', form.errors)
+
+        data['phone'] = '1234567890'  # 10 digits but starts with 1 (not 6,7,8,9)
+        form = StudentForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('phone', form.errors)
+
+        data['phone'] = 'abcdefghij'  # Alphabetic
+        form = StudentForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('phone', form.errors)
+
+    def test_invalid_course_rejected(self):
+        data = self.valid_data.copy()
+        data['course'] = 'NonExistentCourse'
+        form = StudentForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('course', form.errors)
+
+        data['course'] = ''
+        form = StudentForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('course', form.errors)
+
+    def test_invalid_registration_number_rejected(self):
+        data = self.valid_data.copy()
+        data['registration_number'] = 'AB'  # Too short
+        form = StudentForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('registration_number', form.errors)
+
+        data['registration_number'] = 'MEA@22#MCA'  # Invalid symbols
+        form = StudentForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('registration_number', form.errors)
+
+    def test_duplicate_email_rejected(self):
+        Student.objects.create(
+            registration_number='MEA22MCA001',
+            name='First Student',
+            email='alreadyexists@meaec.edu.in',
+            phone='9876543210',
+            course='MCA'
+        )
+        data = self.valid_data.copy()
+        data['email'] = 'alreadyexists@meaec.edu.in'
+        form = StudentForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('email', form.errors)
+
+    def test_short_password_rejected(self):
+        data = self.valid_data.copy()
+        data['password'] = 'short'
+        data['confirm_password'] = 'short'
+        form = StudentForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('password', form.errors)
+
+    def test_resume_file_extension_validation(self):
+        # Valid PDF file
+        pdf_file = SimpleUploadedFile("resume.pdf", b"%PDF-1.4 test resume content", content_type="application/pdf")
+        form = StudentForm(data=self.valid_data, files={'resume': pdf_file})
+        self.assertTrue(form.is_valid(), form.errors)
+
+        # Invalid .exe file
+        exe_file = SimpleUploadedFile("script.exe", b"binary content", content_type="application/x-msdownload")
+        form = StudentForm(data=self.valid_data, files={'resume': exe_file})
+        self.assertFalse(form.is_valid())
+        self.assertIn('resume', form.errors)
+
